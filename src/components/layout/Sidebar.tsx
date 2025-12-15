@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Wallet, Users, LogOut } from "lucide-react";
+import { ShoppingCart, Wallet, Users, LogOut, HomeIcon } from "lucide-react";
 
 const menuItems = [
+  {
+    label: "Inicio",
+    href: "/dashboard",
+    icon: HomeIcon,
+  },
   {
     label: "Ventas",
     href: "/ventas",
@@ -32,7 +37,7 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 bg-slate-900 text-white flex flex-col">
-      <div className="p-4 font-bold text-lg">Facturación</div>
+      <div className="p-4 font-bold text-lg">RingMotos</div>
 
       <nav className="flex-1 px-4 space-y-1">
         {menuItems.map((item) => {
