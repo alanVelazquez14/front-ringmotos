@@ -1,9 +1,8 @@
-export default function Header() {
+export default function DashboardPage() {
   return (
-    <header className="bg-white shadow p-4 flex justify-between items-center">
-      <h1 className="text-xl font-bold">Dashboard</h1>
-      <div>
-      </div>
-    </header>
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Bienvenido al Dashboard</h1>
+      <p>Esta es la página principal del dashboard.</p>
+    </div>
   );
 }
