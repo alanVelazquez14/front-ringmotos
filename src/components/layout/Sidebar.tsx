@@ -21,6 +21,11 @@ const menuItems = [
     icon: Wallet,
   },
   {
+    label: "Movimientos",
+    href: "/caja/movimientos",
+    icon: Wallet,
+  },
+  {
     label: "Clientes",
     href: "/clientes",
     icon: Users,
