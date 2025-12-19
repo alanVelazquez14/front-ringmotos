@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import Cookies from "js-cookie"
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,8 +28,12 @@ export default function LoginPage() {
       console.log("Datos de la respuesta (res.data):", res.data);
 
       const token = res.data.access_token;
-      Cookies.set("token", token, { expires: 7, secure: true, sameSite: 'Strict' });
-      router.push("/dashboard");
+      Cookies.set("token", token, {
+        expires: 7,
+        secure: true,
+        sameSite: "Strict",
+      });
+      router.replace("/ventas");
     } catch (err: any) {
       setError(err.response?.data?.message || "Error al iniciar sesión");
     } finally {

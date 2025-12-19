@@ -56,7 +56,7 @@ export default function Sidebar() {
       <aside
         className={`
           fixed md:static z-50
-          w-64 bg-slate-900 text-white flex flex-col
+          w-64 bg-slate-900 text-slate-100 flex flex-col
           h-full
           transition-transform
           ${open ? "translate-x-0" : "-translate-x-full"}
@@ -80,7 +80,7 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 py-2 px-3 rounded hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-3 py-2 px-3 rounded font-bold text-lg hover:bg-slate-800 hover:text-slate-300 transition-colors"
               >
                 <Icon size={18} />
                 <span>{item.label}</span>
@@ -93,7 +93,7 @@ export default function Sidebar() {
         <div className="p-4 border-t border-slate-700">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-white hover:bg-green-800 text-black hover:text-white py-2 rounded transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-slate-300 hover:bg-green-700 text-black hover:text-white py-2 rounded transition-colors"
           >
             <LogOut size={18} />
             <span>Cerrar sesión</span>

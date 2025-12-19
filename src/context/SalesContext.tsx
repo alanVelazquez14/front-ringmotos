@@ -2,16 +2,23 @@
 
 import { createContext, useContext, useState } from "react";
 import { api } from "@/lib/api";
-import axios from "axios";
 
 export type SaleStatus = "OPEN" | "PAID" | "CANCELLED";
 
 export type SaleItem = {
-  productId: string;
+  id?: string;
+  productId?: string;
   description: string;
   qty: number;
   unitPrice: number;
   total: number;
+};
+
+export type AddSaleItemPayload = {
+  productId?: string | null;
+  qty: number;
+  unitPrice: number;
+  description: string;
 };
 
 export type PaymentMethod = "CASH" | "TRANSFER" | "CARD";
@@ -77,35 +84,37 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   };
 
   //Agregar producto a la venta
-  // Agregar producto a la venta usando la instancia 'api'
   const addItem = async ({
     qty,
     unitPrice,
     description,
-  }: {
-    qty: number;
-    unitPrice: number;
-    description: string;
-  }) => {
+  }: AddSaleItemPayload) => {
     if (!sale) return;
-
     try {
       setLoading(true);
-
-      const response = await api.post(`/sales/${sale.id}/items`, {
+      const res = await api.post(`/sales/${sale.id}/items`, {
         qty,
         unitPrice,
         description,
       });
 
-      // Axios guarda la respuesta del servidor en .data
-      setSale(response.data);
+      const newItem = res.data;
+
+      setSale((prev) => {
+        if (!prev) return prev;
+        const currentTotal = Number(prev.total) || 0;
+        const itemTotal = Number(newItem.total) || 0;
+        const currentBalance = Number(prev.balance) || 0;
+
+        return {
+          ...prev,
+          items: [...(prev.items ?? []), newItem],
+          total: currentTotal + itemTotal,
+          balance: currentBalance + itemTotal,
+        };
+      });
     } catch (error) {
       console.error("Error al agregar item:", error);
-      // Agregamos un log para ver qué responde el servidor de Render en caso de error
-      if (axios.isAxiosError(error)) {
-        console.error("Detalle del error:", error.response?.data);
-      }
     } finally {
       setLoading(false);
     }
@@ -113,14 +122,41 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
 
   //Eliminar producto de la venta
   const removeItem = async (itemId: string) => {
-    if (!sale) return;
+    if (!sale || !itemId) return;
 
     try {
       setLoading(true);
 
-      const res = await api.delete(`/sales/items/${itemId}`);
+      // Enviar saleId en el body de DELETE (Axios requiere { data: ... })
+      const res = await api.delete(`/sales/items/${itemId}`, {
+        data: { saleId: sale.id },
+      });
 
+      // Actualizar venta en memoria con la respuesta del backend
       setSale(res.data);
+    } catch (error: any) {
+      // Manejo más detallado del error
+      if (error.response) {
+        // El backend respondió con un error
+        console.error(
+          "Error al eliminar item:",
+          error.response.status,
+          error.response.data
+        );
+        alert(
+          `No se pudo eliminar el item: ${
+            error.response.data.message || "Error interno"
+          }`
+        );
+      } else if (error.request) {
+        // La petición fue hecha pero no hubo respuesta
+        console.error("No hubo respuesta del servidor:", error.request);
+        alert("No hubo respuesta del servidor. Intenta nuevamente.");
+      } else {
+        // Otro tipo de error
+        console.error("Error desconocido:", error.message);
+        alert("Ocurrió un error desconocido.");
+      }
     } finally {
       setLoading(false);
     }
@@ -148,7 +184,6 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     if (!sale) return;
     try {
       setLoading(true);
-      // La imagen sugiere /payments, no /sales/{id}/payments
       const res = await api.post(`/payments`, {
         saleId: sale.id, // Probablemente se pase por body
         amount,

@@ -32,7 +32,7 @@ export default function DashboardLayout({
 
   return (
     <SalesProvider>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen min-h-screen bg-gradient-to-br from-slate-300 to-slate-400">
         <Sidebar />
         <div className="flex flex-col flex-1">
           <main className="flex-1 overflow-y-auto p-6">{children}</main>

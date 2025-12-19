@@ -40,10 +40,10 @@ export default function SalesPage() {
 
   if (!isVentaIniciada) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="mt-10 flex justify-center px-4">
         <button
           onClick={handleStartSale}
-          className="bg-green-600 hover:bg-green-700 text-white text-2xl font-bold py-5 px-10 rounded-xl shadow-lg transition-transform active:scale-95"
+          className="hover:bg-green-700 text-black hover:text-white text-xl sm:text-2xl font-bold py-5 px-8 sm:px-10 rounded-xl transition-transform active:scale-95 w-full sm:w-auto"
         >
           + Iniciar Nueva Venta
         </button>
@@ -51,34 +51,36 @@ export default function SalesPage() {
     );
   }
 
-  if (loading || !sale) return <p className="p-6">Cargando...</p>;
+  if (loading || !sale) return <p className="p-6 mt-10">Cargando...</p>;
 
   const isClosed = sale.status === "PAID" || sale.status === "CANCELLED";
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="mt-10 p-4 sm:p-6 space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl sm:text-3xl font-bold">
             {isClosed ? "Venta Finalizada" : "Nueva Venta"}
           </h1>
-          <p className="text-sm text-gray-400 font-mono mt-1">ID: {sale.id}</p>
+          <p className="text-sm text-gray-400 font-mono mt-1 break-all">
+            ID: {sale.id}
+          </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           {!isClosed ? (
             <>
               <button
                 onClick={handleCancel}
-                className="px-5 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="px-5 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 transition-colors w-full sm:w-auto"
               >
                 Cancelar
               </button>
               <button
                 onClick={finalizeAndRemit}
                 disabled={!sale.items || sale.items.length === 0}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 w-full sm:w-auto"
               >
                 Finalizar & Remito
               </button>
@@ -86,7 +88,7 @@ export default function SalesPage() {
           ) : (
             <button
               onClick={handlePrint}
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg flex items-center gap-2 hover:bg-black transition-colors"
+              className="px-6 py-2 bg-gray-900 text-white rounded-lg flex justify-center items-center gap-2 hover:bg-black transition-colors w-full sm:w-auto"
             >
               <span>🖨️</span> Imprimir Remito
             </button>
@@ -100,7 +102,7 @@ export default function SalesPage() {
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white p-5 rounded-xl shadow-md">
             <p className="text-sm text-gray-500">Cliente</p>
-            <p className="font-bold text-lg mt-1">
+            <p className="font-bold text-lg mt-1 break-words">
               {sale.clientId || "Consumidor Final"}
             </p>
           </div>
@@ -113,7 +115,7 @@ export default function SalesPage() {
           {/* RESUMEN */}
           <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-3">
             <h2 className="font-bold text-xl border-b pb-2">Resumen</h2>
-            <div className="flex justify-between items-center text-2xl font-bold">
+            <div className="flex justify-between items-center text-xl sm:text-2xl font-bold">
               <span>Total</span>
               <span>${sale.total}</span>
             </div>

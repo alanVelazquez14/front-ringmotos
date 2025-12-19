@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
-  const DASHBOARD_URL = "/dashboard";
+  const DASHBOARD_URL = "/ventas";
   const LOGIN_URL = "/login";
 
   if (!token && pathname !== LOGIN_URL) {
@@ -19,5 +19,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/login", "/dashboard/:path*", "/"],
+  matcher: ["/login", "/ventas/:path*", "/"],
 };
