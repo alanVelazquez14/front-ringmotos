@@ -2,38 +2,33 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Wallet, Users, LogOut, HomeIcon } from "lucide-react";
+import { useState } from "react";
+import {
+  ShoppingCart,
+  Wallet,
+  Users,
+  LogOut,
+  HomeIcon,
+  CreditCard,
+  ChartCandlestick,
+  UserRoundPlus,
+  Menu,
+  X,
+} from "lucide-react";
 
 const menuItems = [
-  {
-    label: "Inicio",
-    href: "/dashboard",
-    icon: HomeIcon,
-  },
-  {
-    label: "Ventas",
-    href: "/ventas",
-    icon: ShoppingCart,
-  },
-  {
-    label: "Caja",
-    href: "/caja",
-    icon: Wallet,
-  },
-  {
-    label: "Movimientos",
-    href: "/caja/movimientos",
-    icon: Wallet,
-  },
-  {
-    label: "Clientes",
-    href: "/clientes",
-    icon: Users,
-  },
+  // { label: "Inicio", href: "/dashboard", icon: HomeIcon },
+  { label: "Ventas", href: "/ventas", icon: ShoppingCart },
+  { label: "Caja", href: "/caja", icon: Wallet },
+  { label: "Cuenta Corriente", href: "/cuenta-corriente", icon: CreditCard },
+  { label: "Clientes", href: "/clientes", icon: Users },
+  { label: "Reportes", href: "/reportes", icon: ChartCandlestick },
+  { label: "Registro", href: "/registro", icon: UserRoundPlus },
 ];
 
 export default function Sidebar() {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
     document.cookie = "token=; Max-Age=0; path=/";
@@ -41,36 +36,70 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 text-white flex flex-col">
-      <div className="p-4 font-bold text-lg">RingMotos</div>
+    <>
+      {/* Botón hamburguesa (solo mobile) */}
+      <button
+        onClick={() => setOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-slate-900 text-white p-2 rounded"
+      >
+        <Menu size={22} />
+      </button>
 
-      <nav className="flex-1 px-4 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
+      {/* Overlay */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        />
+      )}
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 py-2 px-3 rounded hover:bg-slate-800 transition-colors"
-            >
-              <Icon size={18} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <aside
+        className={`
+          fixed md:static z-50
+          w-64 bg-slate-900 text-white flex flex-col
+          h-full
+          transition-transform
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+        `}
+      >
+        <div className="p-5 font-bold text-lg flex items-center justify-between">
+          RingMotos
+          {/* Cerrar en mobile */}
+          <button onClick={() => setOpen(false)} className="md:hidden">
+            <X size={20} />
+          </button>
+        </div>
 
-      {/* Logout */}
-      <div className="p-4 border-t border-slate-700">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 bg-white hover:bg-green-800 text-black hover:text-white py-2 rounded transition-colors"
-        >
-          <LogOut size={18} />
-          <span>Cerrar sesión</span>
-        </button>
-      </div>
-    </aside>
+        <nav className="flex-1 px-4 space-y-6">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 py-2 px-3 rounded hover:bg-slate-800 transition-colors"
+              >
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-4 border-t border-slate-700">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 bg-white hover:bg-green-800 text-black hover:text-white py-2 rounded transition-colors"
+          >
+            <LogOut size={18} />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

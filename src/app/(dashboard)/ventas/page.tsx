@@ -1,68 +1,144 @@
 "use client";
 
-import { useVenta } from "@/hooks/useVenta";
-import ItemsTable from "./components/ItemsTable";
+import { useEffect, useState } from "react";
+import { useSales } from "@/context/SalesContext";
+import SaleItemsTable from "@/components/ventas/SalesItemsTable";
+import PaymentModal from "@/components/ventas/PaymentModal";
 
-export default function VentasPage() {
+export default function SalesPage() {
   const {
-    items,
-    agregarItem,
-    eliminarItem,
-    total,
-    pago,
-    setPago,
-    saldo,
-  } = useVenta();
+    sale,
+    loading,
+    createSale,
+    finalizeAndRemit,
+    cancelSale,
+    markRemitoAsPrinted,
+  } = useSales();
 
-  const addMockItem = () => {
-    agregarItem({
-      nombre: "Producto prueba",
-      precio: 1000,
-      cantidad: 1,
-    });
+  const [isVentaIniciada, setIsVentaIniciada] = useState(false);
+
+  useEffect(() => {
+    if (sale) setIsVentaIniciada(true);
+  }, [sale]);
+
+  const handleStartSale = () => {
+    setIsVentaIniciada(true);
+    if (!sale) createSale();
   };
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Nueva Venta</h1>
+  const handleCancel = async () => {
+    if (confirm("¿Cancelar la venta actual?")) {
+      await cancelSale();
+      setIsVentaIniciada(false);
+    }
+  };
 
-      <button
-        onClick={addMockItem}
-        className="bg-slate-900 text-white px-4 py-2 rounded"
-      >
-        Agregar producto
-      </button>
+  const handlePrint = async () => {
+    window.print();
+    if (sale?.id) await markRemitoAsPrinted(sale.id);
+  };
 
-      <ItemsTable items={items} onDelete={eliminarItem} />
-
-      <div className="max-w-sm space-y-2 ml-auto">
-        <div className="flex justify-between">
-          <span>Total</span>
-          <strong>${total}</strong>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <span>Paga con</span>
-          <input
-            type="number"
-            value={pago}
-            onChange={(e) => setPago(Number(e.target.value))}
-            className="border p-1 w-32 text-right"
-          />
-        </div>
-
-        <div className="flex justify-between">
-          <span>Saldo</span>
-          <strong
-            className={saldo > 0 ? "text-red-600" : "text-green-600"}
-          >
-            ${saldo}
-          </strong>
-        </div>
-
-        <button className="w-full bg-green-600 text-white py-2 rounded">
-          Confirmar venta
+  if (!isVentaIniciada) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <button
+          onClick={handleStartSale}
+          className="bg-green-600 hover:bg-green-700 text-white text-2xl font-bold py-5 px-10 rounded-xl shadow-lg transition-transform active:scale-95"
+        >
+          + Iniciar Nueva Venta
         </button>
+      </div>
+    );
+  }
+
+  if (loading || !sale) return <p className="p-6">Cargando...</p>;
+
+  const isClosed = sale.status === "PAID" || sale.status === "CANCELLED";
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {isClosed ? "Venta Finalizada" : "Nueva Venta"}
+          </h1>
+          <p className="text-sm text-gray-400 font-mono mt-1">ID: {sale.id}</p>
+        </div>
+
+        <div className="flex gap-3">
+          {!isClosed ? (
+            <>
+              <button
+                onClick={handleCancel}
+                className="px-5 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={finalizeAndRemit}
+                disabled={!sale.items || sale.items.length === 0}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300"
+              >
+                Finalizar & Remito
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handlePrint}
+              className="px-6 py-2 bg-gray-900 text-white rounded-lg flex items-center gap-2 hover:bg-black transition-colors"
+            >
+              <span>🖨️</span> Imprimir Remito
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* CUERPO DE LA VENTA */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* CLIENTE Y ITEMS */}
+        <div className="md:col-span-2 space-y-6">
+          <div className="bg-white p-5 rounded-xl shadow-md">
+            <p className="text-sm text-gray-500">Cliente</p>
+            <p className="font-bold text-lg mt-1">
+              {sale.clientId || "Consumidor Final"}
+            </p>
+          </div>
+
+          <SaleItemsTable />
+        </div>
+
+        {/* RESUMEN Y PAGOS */}
+        <div className="space-y-6">
+          {/* RESUMEN */}
+          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-3">
+            <h2 className="font-bold text-xl border-b pb-2">Resumen</h2>
+            <div className="flex justify-between items-center text-2xl font-bold">
+              <span>Total</span>
+              <span>${sale.total}</span>
+            </div>
+            {sale.balance > 0 && (
+              <div className="flex justify-between items-center text-red-600 font-semibold">
+                <span>Saldo pendiente</span>
+                <span>${sale.balance}</span>
+              </div>
+            )}
+          </div>
+
+          {/* PAGOS */}
+          {!isClosed && (
+            <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-4">
+              <h2 className="font-bold text-xl border-b pb-2">Pagos</h2>
+              <p className="text-gray-500 text-sm">
+                Selecciona un método de pago o abona el total.
+              </p>
+              <div className="flex flex-col gap-3">
+                <PaymentModal type="TOTAL" />
+                {sale.clientId && <PaymentModal type="PARTIAL" />}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

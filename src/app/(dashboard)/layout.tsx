@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
-import { CashRegisterProvider } from "@/context/CashRegisterContext";
+import { SalesProvider } from "@/context/SalesContext";
 
 export default function DashboardLayout({
   children,
@@ -31,13 +31,13 @@ export default function DashboardLayout({
   }
 
   return (
-    <CashRegisterProvider>
+    <SalesProvider>
       <div className="flex h-screen bg-gray-100">
         <Sidebar />
         <div className="flex flex-col flex-1">
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
-    </CashRegisterProvider>
+    </SalesProvider>
   );
 }
