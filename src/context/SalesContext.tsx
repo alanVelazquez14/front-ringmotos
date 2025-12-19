@@ -124,41 +124,22 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const removeItem = async (itemId: string) => {
     if (!sale || !itemId) return;
 
+    const originalSale = { ...sale };
+    setSale((prev) => {
+      if (!prev) return null;
+      const newItems = prev.items.filter((i) => i.id !== itemId);
+      return { ...prev, items: newItems };
+    });
+
     try {
-      setLoading(true);
-
-      // Enviar saleId en el body de DELETE (Axios requiere { data: ... })
-      const res = await api.delete(`/sales/items/${itemId}`, {
-        data: { saleId: sale.id },
-      });
-
-      // Actualizar venta en memoria con la respuesta del backend
+      await api.delete(`/sales/items/${itemId}`);
+      const res = await api.get(`/sales/${sale.id}`);
       setSale(res.data);
-    } catch (error: any) {
-      // Manejo más detallado del error
-      if (error.response) {
-        // El backend respondió con un error
-        console.error(
-          "Error al eliminar item:",
-          error.response.status,
-          error.response.data
-        );
-        alert(
-          `No se pudo eliminar el item: ${
-            error.response.data.message || "Error interno"
-          }`
-        );
-      } else if (error.request) {
-        // La petición fue hecha pero no hubo respuesta
-        console.error("No hubo respuesta del servidor:", error.request);
-        alert("No hubo respuesta del servidor. Intenta nuevamente.");
-      } else {
-        // Otro tipo de error
-        console.error("Error desconocido:", error.message);
-        alert("Ocurrió un error desconocido.");
-      }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error(
+        "Error en el back, pero ya lo quitamos de la vista:",
+        error
+      );
     }
   };
 

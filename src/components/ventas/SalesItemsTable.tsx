@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useSales } from "@/context/SalesContext";
-import { Plus, Trash2, ShoppingBag, Divide } from "lucide-react"; // Opcional: instalar lucide-react
-import AddItemsTable from "./AddItems";
+import { Plus, Trash2, ShoppingBag } from "lucide-react";
+import AddItemsTable from "./AddItemsTable";
 
 export default function SaleItemsTable() {
   const { sale, addItem, removeItem } = useSales();
@@ -36,7 +36,7 @@ export default function SaleItemsTable() {
   return (
     <>
       <div className="bg-gray-50 md:bg-white rounded-xl md:p-6 shadow-sm overflow-hidden">
-        {/* TABLA DE ENTRADA */}
+        {/* TABLA DE ENTRADA - DESKTOP */}
         <div className="hidden md:block overflow-x-auto mb-6">
           <table className="w-full">
             <thead className="bg-gray-100 text-left">
@@ -98,12 +98,10 @@ export default function SaleItemsTable() {
             </tbody>
           </table>
         </div>
-        {/* ================= MOBILE VIEW (Optimizado) ================= */}
-        <div className="md:hidden flex flex-col h-full">
-          {/* Lista de Items Agregados */}
 
-          {/* Formulario Flotante de Entrada (Mobile) */}
-          <div className="mt-auto bg-white border-t border-gray-200 p-4 pb-8 space-y-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        {/* FORMULARIO DE ENTRADA - MOBILE */}
+        <div className="md:hidden flex flex-col">
+          <div className="bg-white border-t border-gray-200 p-4 pb-8 space-y-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">
               Agregar Producto
             </h3>
@@ -145,47 +143,21 @@ export default function SaleItemsTable() {
               onClick={handleAdd}
               className="w-full bg-blue-600 active:bg-blue-800 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all"
             >
-              <Plus size={24} />
-              Agregar por ${currentTotal.toLocaleString()}
+              <Plus size={24} /> Agregar por ${currentTotal.toLocaleString()}
             </button>
-            <div className="p-4 space-y-3 max-h-[40vh] overflow-y-auto">
-              {sale.items?.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
-                  <ShoppingBag className="mx-auto mb-2 opacity-20" size={48} />
-                  <p>No hay productos en la venta</p>
-                </div>
-              )}
-              {sale.items?.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex justify-between items-center"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-800">
-                      {item.description}
-                    </h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-medium">
-                        Cant: {item.qty}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ${item.unitPrice} c/u
-                      </span>
-                    </div>
-                    <p className="text-blue-600 font-bold mt-1">
-                      Total: ${(item.qty * item.unitPrice).toLocaleString()}
-                    </p>
-                  </div>
-                  <button className="bg-red-50 p-2 rounded-full text-red-500 active:scale-95 transition-transform">
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
-      <AddItemsTable />
+
+      <div className="p-4 max-h-[50vh] overflow-y-auto bg-gray-50 rounded-xl shadow-sm mt-4 md:mt-0">
+        {sale.items?.length === 0 && (
+          <div className="text-center text-gray-400">
+            <ShoppingBag className="mx-auto mb-2 opacity-20" size={48} />
+            <p>No hay productos agregados</p>
+          </div>
+        )}
+        {sale.items?.length > 0 && <AddItemsTable />}
+      </div>
     </>
   );
 }

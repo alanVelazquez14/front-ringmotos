@@ -115,28 +115,49 @@ export default function SalesPage() {
           {/* RESUMEN */}
           <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-3">
             <h2 className="font-bold text-xl border-b pb-2">Resumen</h2>
-            <div className="flex justify-between items-center text-xl sm:text-2xl font-bold">
-              <span>Total</span>
-              <span>${sale.total}</span>
-            </div>
-            {sale.balance > 0 && (
-              <div className="flex justify-between items-center text-red-600 font-semibold">
-                <span>Saldo pendiente</span>
-                <span>${sale.balance}</span>
-              </div>
-            )}
-          </div>
 
+            {(() => {
+              const calculatedTotal =
+                sale.items?.reduce(
+                  (acc, item) =>
+                    acc + Number(item.qty) * Number(item.unitPrice),
+                  0
+                ) || 0;
+
+              const totalPayments =
+                sale.payments?.reduce((acc, p) => acc + Number(p.amount), 0) ||
+                0;
+              const currentBalance = calculatedTotal - totalPayments;
+
+              return (
+                <>
+                  <div className="flex justify-between items-center text-xl sm:text-2xl font-bold">
+                    <span>Total</span>
+                    <span>${calculatedTotal.toLocaleString()}</span>
+                  </div>
+
+                  {currentBalance > 0 && (
+                    <div className="flex justify-between items-center text-red-600 font-semibold">
+                      <span>Saldo pendiente</span>
+                      <span>${currentBalance.toLocaleString()}</span>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
           {/* PAGOS */}
-          {!isClosed && (
+          {!isClosed && sale.items?.length > 0 && (
             <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-4">
               <h2 className="font-bold text-xl border-b pb-2">Pagos</h2>
               <p className="text-gray-500 text-sm">
                 Selecciona un método de pago o abona el total.
               </p>
               <div className="flex flex-col gap-3">
-                <PaymentModal type="TOTAL" />
-                {sale.clientId && <PaymentModal type="PARTIAL" />}
+                <PaymentModal
+               
+                  key={`partial-${sale.items?.length}-${sale.balance ?? 0}`}
+                />
               </div>
             </div>
           )}
