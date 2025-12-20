@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { Users, UserPlus, Search, RefreshCw } from "lucide-react";
-import axios from "axios";
 import AddNewClient from "@/components/clientes/AddNewClient";
 import { api } from "@/lib/api";
+import Link from "next/link";
 
 interface Customer {
-  id?: string | number;
+  id: string | number;
   dni: string;
   name: string;
   lastName: string;
   adress: string;
   phone: string;
   email: string;
+  balance?: number;
 }
 
 export default function CustomersPage() {
@@ -109,42 +110,44 @@ export default function CustomersPage() {
               </div>
             ) : (
               filteredCustomers.map((c: any) => (
-                <div
-                  key={c.id}
-                  className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 shrink-0 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-lg">
-                      {c.name?.[0]}
-                      {c.lastName?.[0]}
-                    </div>
+                <Link key={c.id} href={`/clientes/${c.id}`}>
+                  <div
+                    key={c.id}
+                    className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 shrink-0 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-lg">
+                        {c.name?.[0]}
+                        {c.lastName?.[0]}
+                      </div>
 
-                    <div>
-                      <h3 className="font-bold text-gray-800 text-lg leading-tight group-hover:text-blue-600 transition-colors">
-                        {c.name} {c.lastName}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                        <p className="text-xs font-mono text-gray-400 uppercase tracking-wider">
-                          DNI: {c.dni}
-                        </p>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
-                          <span className="opacity-50 text-xs">📞</span>{" "}
-                          {c.phone || "Sin teléfono"}
-                        </p>
+                      <div>
+                        <h3 className="font-bold text-gray-800 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                          {c.name} {c.lastName}
+                        </h3>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                          <p className="text-xs font-mono text-gray-400 uppercase tracking-wider">
+                            DNI: {c.dni}
+                          </p>
+                          <p className="text-sm text-gray-500 flex items-center gap-1">
+                            <span className="opacity-50 text-xs">📞</span>{" "}
+                            {c.phone || "Sin teléfono"}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col sm:items-end border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
-                    <p className="text-sm text-gray-600 flex items-center gap-2">
-                      <span className="text-gray-300">📍</span>{" "}
-                      {c.adress || "Sin dirección"}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1 italic">
-                      {c.email || "Sin email registrado"}
-                    </p>
+                    <div className="flex flex-col sm:items-end border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
+                      <p className="text-sm text-gray-600 flex items-center gap-2">
+                        <span className="text-gray-300">📍</span>{" "}
+                        {c.adress || "Sin dirección"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1 italic">
+                        {c.email || "Sin email registrado"}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>

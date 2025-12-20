@@ -8,7 +8,6 @@ import {
   Wallet,
   Users,
   LogOut,
-  HomeIcon,
   CreditCard,
   ChartCandlestick,
   UserRoundPlus,
