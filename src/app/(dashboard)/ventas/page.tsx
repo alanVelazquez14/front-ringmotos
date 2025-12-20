@@ -40,7 +40,7 @@ export default function SalesPage() {
 
   if (!isVentaIniciada) {
     return (
-      <div className="mt-10 flex justify-center px-4">
+      <div className="mt-10 flex px-4">
         <button
           onClick={handleStartSale}
           className="hover:bg-green-700 text-black hover:text-white text-xl sm:text-2xl font-bold py-5 px-8 sm:px-10 rounded-xl transition-transform active:scale-95 w-full sm:w-auto"
