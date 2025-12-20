@@ -56,7 +56,7 @@ export default function SalesPage() {
   const isClosed = sale.status === "PAID" || sale.status === "CANCELLED";
 
   return (
-    <div className="mt-10 p-4 sm:p-6 space-y-6">
+    <div className="mt-5 p-4 sm:p-6 space-y-6">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
         <div>
@@ -96,9 +96,7 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* CUERPO DE LA VENTA */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* CLIENTE Y ITEMS */}
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white p-5 rounded-xl shadow-md">
             <p className="text-sm text-gray-500">Cliente</p>
@@ -110,11 +108,8 @@ export default function SalesPage() {
           <SaleItemsTable />
         </div>
 
-        {/* RESUMEN Y PAGOS */}
         <div className="space-y-6">
-          {/* RESUMEN */}
-          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-3">
-            <h2 className="font-bold text-xl border-b pb-2">Resumen</h2>
+          <div className="bg-white p-4 rounded-xl shadow-md flex flex-col space-y-3">
 
             {(() => {
               const calculatedTotal =
@@ -148,11 +143,7 @@ export default function SalesPage() {
           </div>
           {/* PAGOS */}
           {!isClosed && sale.items?.length > 0 && (
-            <div className="bg-white p-6 rounded-xl shadow-md flex flex-col space-y-4">
-              <h2 className="font-bold text-xl border-b pb-2">Pagos</h2>
-              <p className="text-gray-500 text-sm">
-                Selecciona un método de pago o abona el total.
-              </p>
+            <div className="bg-white p-2 rounded-xl shadow-md flex flex-col space-y-4">
               <div className="flex flex-col gap-3">
                 <PaymentModal
                

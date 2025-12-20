@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSales } from "@/context/SalesContext";
-import { Trash2 } from "lucide-react";
+import { ShoppingBag, Trash2 } from "lucide-react";
 
 export default function AddItemsTable() {
   const { sale, addItem, removeItem } = useSales();
@@ -40,8 +40,12 @@ export default function AddItemsTable() {
           <thead className="bg-gray-100 text-left">
             <tr>
               <th className="p-3 text-sm font-semibold text-gray-600">Cant.</th>
-              <th className="p-3 text-sm font-semibold text-gray-600">Descripción</th>
-              <th className="p-3 text-sm font-semibold text-gray-600">Precio Unit.</th>
+              <th className="p-3 text-sm font-semibold text-gray-600">
+                Descripción
+              </th>
+              <th className="p-3 text-sm font-semibold text-gray-600">
+                Precio Unit.
+              </th>
               <th className="p-3 text-sm font-semibold text-gray-600">Total</th>
               <th />
             </tr>
@@ -81,31 +85,46 @@ export default function AddItemsTable() {
       </div>
 
       {/* MOBILE */}
-      <div className="md:hidden max-h-[50vh] overflow-y-auto bg-gray-50 rounded-xl shadow-sm">
+      <div className="mt-4">
         {sale.items?.length === 0 ? (
-          <p className="text-center text-gray-400">No hay productos agregados</p>
+          <div className="flex flex-col items-center justify-center py-12 border-gray-200 rounded-2xl bg-gray-50/30 text-center">
+            <ShoppingBag className="text-gray-300 mb-2 opacity-20" size={48} />
+            <p className="text-gray-400 text-sm">No hay productos agregados</p>
+          </div>
         ) : (
-          sale.items.map((item, index) => (
-            <div
-              key={item.id || index}
-              className="bg-white p-4 rounded-xl shadow mb-3 flex justify-between items-center"
-            >
-              <div>
-                <p className="font-bold">{item.description}</p>
-                <p className="text-sm text-gray-500">Cant: {item.qty}</p>
-                <p className="text-sm text-gray-500">Unit: ${item.unitPrice}</p>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto w-full">
+            {sale.items.map((item, index) => (
+              <div
+                key={item.id || index}
+                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center"
+              >
+                <div className="flex-1">
+                  <p className="font-bold text-gray-800 leading-tight">
+                    {item.description}
+                  </p>
+                  <div className="flex gap-3 mt-1">
+                    <span className="text-xs text-gray-400 font-medium">
+                      Cant: {item.qty}
+                    </span>
+                    <span className="text-xs text-gray-400 font-medium">
+                      ${Number(item.unitPrice).toLocaleString()} c/u
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 ml-4">
+                  <p className="font-bold text-blue-600 text-base">
+                    ${(item.qty * item.unitPrice).toLocaleString()}
+                  </p>
+                  <button
+                    onClick={() => removeItem(item.id!)}
+                    className="bg-red-50 p-2 rounded-xl text-red-400 active:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <p className="font-bold text-blue-600">${item.qty * item.unitPrice}</p>
-                <button
-                  onClick={() => removeItem(item.id!)}
-                  className="text-red-400 hover:text-red-600 p-1 transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </>
