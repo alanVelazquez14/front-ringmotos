@@ -24,7 +24,7 @@ export default function AddItemsTable({ isMobile }: Props) {
   if (isMobile) {
     return (
       <div className="space-y-3 max-h-[60vh] overflow-y-auto w-full">
-        {sale.items.map((item, index) => (
+        {sale.items?.map((item, index) => (
           <div
             key={item.id || index}
             className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center"
@@ -77,7 +77,7 @@ export default function AddItemsTable({ isMobile }: Props) {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {sale.items.map((item, index) => (
+          {sale.items?.map((item, index) => (
             <tr
               key={item.id || index}
               className="hover:bg-gray-50 transition-colors"

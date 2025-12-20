@@ -110,14 +110,11 @@ export default function SalesPage() {
 
         <div className="space-y-6">
           <div className="bg-white p-4 rounded-xl shadow-md flex flex-col space-y-3">
-
             {(() => {
-              const calculatedTotal =
-                sale.items?.reduce(
-                  (acc, item) =>
-                    acc + Number(item.qty) * Number(item.unitPrice),
-                  0
-                ) || 0;
+              const calculatedTotal = (sale.items || []).reduce(
+                (acc, item) => acc + Number(item.qty) * Number(item.unitPrice),
+                0
+              );
 
               const totalPayments =
                 sale.payments?.reduce((acc, p) => acc + Number(p.amount), 0) ||
@@ -146,7 +143,6 @@ export default function SalesPage() {
             <div className="bg-white p-2 rounded-xl shadow-md flex flex-col space-y-4">
               <div className="flex flex-col gap-3">
                 <PaymentModal
-               
                   key={`partial-${sale.items?.length}-${sale.balance ?? 0}`}
                 />
               </div>
