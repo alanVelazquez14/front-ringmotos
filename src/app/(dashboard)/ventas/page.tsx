@@ -5,7 +5,15 @@ import { useSales } from "@/context/SalesContext";
 import SaleItemsTable from "@/components/ventas/SalesItemsTable";
 import PaymentModal from "@/components/ventas/PaymentModal";
 import { api } from "@/lib/api";
-import { User } from "lucide-react";
+import {
+  CheckCircle,
+  Loader2,
+  Printer,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function SalesPage() {
@@ -22,6 +30,7 @@ export default function SalesPage() {
   const [isVentaIniciada, setIsVentaIniciada] = useState(false);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [finalConsumer, setFinalConsumer] = useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     const loadClients = async () => {
@@ -65,7 +74,6 @@ export default function SalesPage() {
           <p className="font-semibold text-gray-800">
             ¿Cancelar la venta actual?
           </p>
-
           <div className="flex gap-2">
             <button
               onClick={async () => {
@@ -78,7 +86,6 @@ export default function SalesPage() {
             >
               Sí, cancelar
             </button>
-
             <button
               onClick={() => toast.dismiss(t.id)}
               className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl font-bold"
@@ -88,9 +95,7 @@ export default function SalesPage() {
           </div>
         </div>
       ),
-      {
-        duration: Infinity,
-      }
+      { duration: Infinity }
     );
   };
 
@@ -99,12 +104,31 @@ export default function SalesPage() {
     if (sale?.id) await markRemitoAsPrinted(sale.id);
   };
 
+  const handleFinalizeSale = async () => {
+    if (!sale?.id) return;
+    try {
+      setIsConfirming(true);
+      const loadToast = toast.loading("Confirmando venta...");
+      await finalizeAndRemit(); //
+      toast.success("Venta confirmada", { id: loadToast });
+
+      setTimeout(() => {
+        window.print();
+        markRemitoAsPrinted(sale.id);
+      }, 800);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Error al confirmar");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   if (!isVentaIniciada) {
     return (
       <div className="mt-10 flex px-4">
         <button
           onClick={handleStartSale}
-          className="hover:bg-green-700 text-black hover:text-white text-xl sm:text-2xl font-bold py-5 px-8 sm:px-10 rounded-xl transition-transform active:scale-95 w-full sm:w-auto"
+          className="hover:bg-green-700 text-black hover:text-white text-xl font-bold py-5 px-10 rounded-xl shadow-lg transition-all"
         >
           + Iniciar Nueva Venta
         </button>
@@ -115,129 +139,243 @@ export default function SalesPage() {
   if (loading || !sale) return <p className="p-6 mt-10">Cargando...</p>;
 
   const isClosed = sale.status === "PAID" || sale.status === "CANCELLED";
+  const calculatedTotal = (sale.items || []).reduce(
+    (acc: number, item: any) => acc + Number(item.qty) * Number(item.unitPrice),
+    0
+  );
+  const totalPayments =
+    sale.payments?.reduce((acc: number, p: any) => acc + Number(p.amount), 0) ||
+    0;
+  const currentBalance = calculatedTotal - totalPayments;
+  const selectedClient =
+    availableClients.find((c) => c.id === sale.clientId) || finalConsumer;
 
   return (
     <div className="mt-5 p-4 sm:p-6 space-y-6">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            {isClosed ? "Venta Finalizada" : "Nueva Venta"}
-          </h1>
-          <p className="text-sm text-gray-400 font-mono mt-1 break-all">
-            ID: {sale.id}
-          </p>
-        </div>
+      <style jsx global>{`
+        @media print {
+          /*Ocultar absolutamente todo lo que no sea la factura */
+          body * {
+            visibility: hidden;
+          }
+          #printable-invoice,
+          #printable-invoice * {
+            visibility: visible;
+          }
+          #printable-invoice {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          {!isClosed ? (
-            <>
-              <button
-                onClick={handleCancel}
-                className="px-5 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 transition-colors w-full sm:w-auto"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={finalizeAndRemit}
-                disabled={!sale.items || sale.items.length === 0}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 w-full sm:w-auto"
-              >
-                Finalizar & Remito
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handlePrint}
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg flex justify-center items-center gap-2 hover:bg-black transition-colors w-full sm:w-auto"
+          /* Matar scrolls en todos los niveles */
+          html,
+          body,
+          main,
+          div,
+          section {
+            overflow: visible !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            scroll-behavior: auto !important;
+          }
+
+          /*Ocultar Toasts (react-hot-toast) */
+          [toast-list],
+          .toaster,
+          div[role="status"] {
+            display: none !important;
+            opacity: 0 !important;
+          }
+          @page {
+            margin: 1cm;
+          }
+        }
+      `}</style>
+
+      {/* UI DE PANTALLA (Oculta en impresión) */}
+      <div className="print:hidden space-y-6">
+        <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border">
+          <div>
+            <h1 className="text-2xl font-black">
+              {isClosed ? "Venta Finalizada" : "Nueva Venta"}
+            </h1>
+            <p className="text-xs font-mono text-gray-400">ID: {sale.id}</p>
+          </div>
+          <div className="flex gap-3">
+            <button className="px-8 py-3 bg-red-600 text-white rounded-xl font-bold flex items-center gap-2"
+              onClick={handleCancel}
+              disabled={isClosed}
             >
-              <span>🖨️</span> Imprimir Remito
+              Cancelar Venta
             </button>
-          )}
+            {!isClosed ? (
+              <button
+                onClick={handleFinalizeSale}
+                disabled={!sale.items?.length || isConfirming}
+                className="px-8 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2"
+              >
+                {isConfirming ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <CheckCircle size={20} />
+                )}
+                Confirmar & Facturar
+              </button>
+            ) : (
+              <button
+                onClick={handlePrint}
+                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center gap-2"
+              >
+                <Printer size={20} /> Imprimir
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-2 sm:p-3 rounded-xl shadow-md border border-gray-100">
-            <label className="text-[10px] sm:text-xs font-black uppercase text-gray-400 tracking-widest mb-1 sm:mb-2 block">
-              Asignar Cliente
-            </label>
-
-            <div className="relative">
-              <User
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={16} // mobile
-              />
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6 text-black">
+            <div className="bg-white p-4 rounded-2xl border">
+              <label className="text-[10px] font-black uppercase text-gray-400 block mb-2">
+                Cliente
+              </label>
               <select
                 disabled={isClosed}
                 value={sale.clientId || finalConsumer?.id || ""}
                 onChange={(e) => handleClientChange(e.target.value)}
-                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-gray-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-sm sm:text-base font-medium text-gray-700 truncate"
+                className="w-full p-3 bg-gray-50 rounded-xl outline-none"
               >
                 {finalConsumer && (
-                  <option value={finalConsumer.id}>
-                    {finalConsumer.name} (Consumidor Final)
-                  </option>
+                  <option value={finalConsumer.id}>{finalConsumer.name}</option>
                 )}
-
-                <optgroup label="Clientes Registrados">
-                  {availableClients
-                    .filter((c) => c.id !== finalConsumer?.id)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} {c.lastName} – DNI: {c.dni}
-                      </option>
-                    ))}
-                </optgroup>
+                {availableClients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.lastName}
+                  </option>
+                ))}
               </select>
             </div>
+            <SaleItemsTable />
           </div>
-
-          <SaleItemsTable />
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white p-4 rounded-xl shadow-md flex flex-col space-y-3">
-            {(() => {
-              const calculatedTotal = (sale.items || []).reduce(
-                (acc, item) => acc + Number(item.qty) * Number(item.unitPrice),
-                0
-              );
-
-              const totalPayments =
-                sale.payments?.reduce((acc, p) => acc + Number(p.amount), 0) ||
-                0;
-              const currentBalance = calculatedTotal - totalPayments;
-
-              return (
-                <>
-                  <div className="flex justify-between items-center text-xl sm:text-2xl font-bold">
-                    <span>Total</span>
-                    <span>${calculatedTotal.toLocaleString()}</span>
-                  </div>
-
-                  {currentBalance > 0 && (
-                    <div className="flex justify-between items-center text-red-600 font-semibold">
-                      <span>Saldo pendiente</span>
-                      <span>${currentBalance.toLocaleString()}</span>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-          {/* PAGOS */}
-          {!isClosed && sale.items?.length > 0 && (
-            <div className="bg-white p-2 rounded-xl shadow-md flex flex-col space-y-4">
-              <div className="flex flex-col gap-3">
-                <PaymentModal
-                  key={`partial-${sale.items?.length}-${sale.balance ?? 0}`}
-                />
+          <div className="space-y-6">
+            <div className="bg-white p-5 rounded-2xl border text-black font-black">
+              <div className="flex justify-between text-2xl">
+                <span>Total</span>
+                <span>${calculatedTotal.toLocaleString()}</span>
               </div>
             </div>
-          )}
+            {!isClosed && sale.items?.length > 0 && <PaymentModal />}
+          </div>
+        </div>
+      </div>
+
+      {/* FACTURA PROFESIONAL (ID usado para el selector de impresión) */}
+      <div
+        id="printable-invoice"
+        className="hidden print:block bg-white p-8 text-black font-sans min-h-screen"
+      >
+        <div className="flex justify-between items-start border-b-4 border-black pb-6 mb-8">
+          <div>
+            <h2 className="text-5xl font-black tracking-tighter mb-2">
+              RING MOTOS
+            </h2>
+            <div className="text-[10px] uppercase font-bold text-gray-500 space-y-1">
+              <p className="flex items-center gap-2">
+                <MapPin size={12} /> Av. Principal 1234, San Luis
+              </p>
+              <p className="flex items-center gap-2">
+                <Phone size={12} /> +54 9 266 000-0000
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="border-4 border-black px-6 py-2 mb-2 inline-block font-black text-4xl">
+              R
+            </div>
+            <p className="font-black text-xl uppercase">Remito de Venta</p>
+            <p className="font-mono text-sm">
+              N°: {sale.id.toUpperCase().substring(0, 12)}
+            </p>
+            <p className="font-bold">
+              Fecha: {new Date().toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-8 mb-10 border-2 border-black p-6 rounded-xl bg-gray-50/30">
+          <div>
+            <p className="text-[10px] uppercase font-black text-gray-400 mb-1">
+              Cliente / Razón Social
+            </p>
+            <p className="font-bold text-2xl uppercase">
+              {selectedClient
+                ? `${selectedClient.name} ${selectedClient.lastName || ""}`
+                : "Consumidor Final"}
+            </p>
+            <p className="text-sm">DNI/CUIT: {selectedClient?.dni || "---"}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] uppercase font-black text-gray-400 mb-1">
+              Condición de Venta
+            </p>
+            <p className="font-black text-xl">
+              {currentBalance <= 0 ? "CONTADO / PAGADO" : "CUENTA CORRIENTE"}
+            </p>
+          </div>
+        </div>
+
+        <table className="w-full mb-10 border-collapse">
+          <thead>
+            <tr className="bg-black text-white uppercase text-[10px] tracking-widest">
+              <th className="p-4 text-left">Descripción del Producto</th>
+              <th className="p-4 text-center w-24">Cant.</th>
+              <th className="p-4 text-right w-32">Unitario</th>
+              <th className="p-4 text-right w-40">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 border-b-2 border-black">
+            {sale.items?.map((item: any, i: number) => (
+              <tr key={i} className="text-sm">
+                <td className="p-4 font-bold uppercase">{item.description}</td>
+                <td className="p-4 text-center">{item.qty}</td>
+                <td className="p-4 text-right">
+                  ${Number(item.unitPrice).toLocaleString()}
+                </td>
+                <td className="p-4 text-right font-black text-lg">
+                  ${(item.qty * item.unitPrice).toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="flex justify-between items-end">
+          <div className="w-1/2 p-6 border-2 border-dashed border-gray-300 rounded-2xl">
+            <p className="text-xs font-black uppercase mb-16 text-gray-400">
+              Recibí conforme:
+            </p>
+            <div className="border-t-2 border-black w-full pt-2 flex justify-between text-[10px] font-bold">
+              <span>FIRMA Y ACLARACIÓN</span>
+              <span>DNI N°</span>
+            </div>
+          </div>
+          <div className="w-1/3 space-y-3">
+            <div className="flex justify-between text-gray-500 font-bold px-4 uppercase text-xs">
+              <span>Subtotal Neto</span>
+              <span>${calculatedTotal.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between bg-black text-white p-5 rounded-2xl font-black text-3xl">
+              <span>TOTAL</span>
+              <span>${calculatedTotal.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-24 text-center text-[10px] text-gray-300 font-bold uppercase tracking-widest border-t pt-6">
+          Documento no válido como factura legal - Comprobante de entrega
+          interna
         </div>
       </div>
     </div>
