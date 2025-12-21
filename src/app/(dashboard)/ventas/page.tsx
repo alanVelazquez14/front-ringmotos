@@ -128,7 +128,7 @@ export default function SalesPage() {
       <div className="mt-10 flex px-4">
         <button
           onClick={handleStartSale}
-          className="hover:bg-green-700 text-black hover:text-white text-xl font-bold py-5 px-10 rounded-xl shadow-lg transition-all"
+          className="hover:bg-green-700 text-black hover:text-white text-xl font-bold py-5 px-10 rounded-xl transition-all"
         >
           + Iniciar Nueva Venta
         </button>
@@ -197,15 +197,15 @@ export default function SalesPage() {
 
       {/* UI DE PANTALLA (Oculta en impresión) */}
       <div className="print:hidden space-y-6">
-        <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border">
+         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center bg-white p-4 sm:p-5 rounded-2xl shadow-sm border">
           <div>
             <h1 className="text-2xl font-black">
               {isClosed ? "Venta Finalizada" : "Nueva Venta"}
             </h1>
             <p className="text-xs font-mono text-gray-400">ID: {sale.id}</p>
           </div>
-          <div className="flex gap-3">
-            <button className="px-8 py-3 bg-red-600 text-white rounded-xl font-bold flex items-center gap-2"
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-red-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
               onClick={handleCancel}
               disabled={isClosed}
             >
@@ -215,19 +215,19 @@ export default function SalesPage() {
               <button
                 onClick={handleFinalizeSale}
                 disabled={!sale.items?.length || isConfirming}
-                className="px-8 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2"
+          className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 {isConfirming ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   <CheckCircle size={20} />
                 )}
-                Confirmar & Facturar
+                Confirmar y Facturar
               </button>
             ) : (
               <button
                 onClick={handlePrint}
-                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center gap-2"
+                 className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 <Printer size={20} /> Imprimir
               </button>
