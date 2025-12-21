@@ -60,6 +60,7 @@ type SalesContextType = {
   createRemito: () => Promise<void>;
   markRemitoAsPrinted: (remitoId: string) => Promise<void>;
   finalizeAndRemit: () => Promise<void>;
+  updateSaleClient: (saleId: string, clientId: string) => Promise<void>;
 };
 
 const SalesContext = createContext<SalesContextType | null>(null);
@@ -252,6 +253,22 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+const updateSaleClient = async (saleId: string, clientId: string) => {
+  if (!saleId) {
+    console.error("No hay un ID de venta válido");
+    return;
+  }
+
+  try {
+    const { data } = await api.patch(`/sales/${saleId}`, { clientId });
+
+    setSale(data);
+  } catch (error) {
+    console.error("Error al actualizar el cliente de la venta:", error);
+    throw error;
+  }
+};
+
   return (
     <SalesContext.Provider
       value={{
@@ -268,6 +285,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
         createRemito,
         markRemitoAsPrinted,
         finalizeAndRemit,
+        updateSaleClient,
       }}
     >
       {children}

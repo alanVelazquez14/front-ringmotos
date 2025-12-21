@@ -27,6 +27,7 @@ export default function AddNewClient({
 
     try {
       await api.post("/clients", formData);
+      console.log(formData);
 
       alert("Cliente registrado con éxito");
       onSuccess();

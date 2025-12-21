@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSales } from "@/context/SalesContext";
 import SaleItemsTable from "@/components/ventas/SalesItemsTable";
 import PaymentModal from "@/components/ventas/PaymentModal";
+import { api } from "@/lib/api";
+import { User } from "lucide-react";
 
 export default function SalesPage() {
   const {
@@ -13,13 +15,42 @@ export default function SalesPage() {
     finalizeAndRemit,
     cancelSale,
     markRemitoAsPrinted,
+    updateSaleClient,
   } = useSales();
 
   const [isVentaIniciada, setIsVentaIniciada] = useState(false);
+  const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [finalConsumer, setFinalConsumer] = useState<any>(null);
+
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        const [clientsRes, finalRes] = await Promise.all([
+          api.get("/clients"),
+          api.get("/clients/final-consumer"),
+        ]);
+        setAvailableClients(clientsRes.data || []);
+        setFinalConsumer(finalRes.data);
+      } catch (error) {
+        console.error("Error cargando clientes para venta:", error);
+      }
+    };
+    loadClients();
+  }, []);
 
   useEffect(() => {
     if (sale) setIsVentaIniciada(true);
   }, [sale]);
+
+  const handleClientChange = async (clientId: string) => {
+    try {
+      if (sale?.id) {
+        await updateSaleClient(sale.id, clientId);
+      }
+    } catch (error) {
+      alert("No se pudo actualizar el cliente");
+    }
+  };
 
   const handleStartSale = () => {
     setIsVentaIniciada(true);
@@ -98,11 +129,40 @@ export default function SalesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-5 rounded-xl shadow-md">
-            <p className="text-sm text-gray-500">Cliente</p>
-            <p className="font-bold text-lg mt-1 break-words">
-              {sale.clientId || "Consumidor Final"}
-            </p>
+          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100">
+            <label className="text-xs font-black uppercase text-gray-400 tracking-widest mb-2 block">
+              Asignar Cliente
+            </label>
+            <div className="relative">
+              <User
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <select
+                disabled={isClosed}
+                value={sale.clientId || finalConsumer?.id || ""}
+                onChange={(e) => handleClientChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none font-medium text-gray-700"
+              >
+                {/* Opción de Consumidor Final primero */}
+                {finalConsumer && (
+                  <option value={finalConsumer.id}>
+                    {finalConsumer.name} (Consumidor Final)
+                  </option>
+                )}
+
+                {/* Lista de clientes registrados */}
+                <optgroup label="Clientes Registrados">
+                  {availableClients
+                    .filter((c) => c.id !== finalConsumer?.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.lastName} - DNI: {c.dni}
+                      </option>
+                    ))}
+                </optgroup>
+              </select>
+            </div>
           </div>
 
           <SaleItemsTable />
