@@ -44,11 +44,8 @@ export default function LoginPage() {
   };
 
   return (
-    // Ajuste de fondo y padding para móviles
     <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB] p-4 sm:p-6">
-      {/* Tarjeta: Ancho completo en mobile, max-md en desktop. Bordes reducidos levemente en mobile para ganar espacio */}
       <div className="bg-white p-6 sm:p-10 rounded-[32px] sm:rounded-[40px] shadow-2xl shadow-gray-200/60 border border-gray-50 w-full max-w-[400px] animate-in fade-in zoom-in duration-500">
-        {/* Header con Icono: Escala menor en mobile */}
         <div className="flex flex-col items-center text-center mb-8 sm:mb-10">
           <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-[#111827] flex items-center justify-center text-white mb-4 sm:mb-6 shadow-lg shadow-gray-200">
             <LogIn size={24} className="sm:w-7 sm:h-7" />
