@@ -6,6 +6,7 @@ import SaleItemsTable from "@/components/ventas/SalesItemsTable";
 import PaymentModal from "@/components/ventas/PaymentModal";
 import { api } from "@/lib/api";
 import { User } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function SalesPage() {
   const {
@@ -32,7 +33,7 @@ export default function SalesPage() {
         setAvailableClients(clientsRes.data || []);
         setFinalConsumer(finalRes.data);
       } catch (error) {
-        console.error("Error cargando clientes para venta:", error);
+        toast.error("Error cargando clientes para venta");
       }
     };
     loadClients();
@@ -48,7 +49,7 @@ export default function SalesPage() {
         await updateSaleClient(sale.id, clientId);
       }
     } catch (error) {
-      alert("No se pudo actualizar el cliente");
+      toast.error("No se pudo actualizar el cliente");
     }
   };
 
@@ -129,35 +130,35 @@ export default function SalesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100">
-            <label className="text-xs font-black uppercase text-gray-400 tracking-widest mb-2 block">
+          <div className="bg-white p-2 sm:p-3 rounded-xl shadow-md border border-gray-100">
+            <label className="text-[10px] sm:text-xs font-black uppercase text-gray-400 tracking-widest mb-1 sm:mb-2 block">
               Asignar Cliente
             </label>
+
             <div className="relative">
               <User
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={20}
+                size={16} // mobile
               />
+
               <select
                 disabled={isClosed}
                 value={sale.clientId || finalConsumer?.id || ""}
                 onChange={(e) => handleClientChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none font-medium text-gray-700"
+                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-gray-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-sm sm:text-base font-medium text-gray-700 truncate"
               >
-                {/* Opción de Consumidor Final primero */}
                 {finalConsumer && (
                   <option value={finalConsumer.id}>
                     {finalConsumer.name} (Consumidor Final)
                   </option>
                 )}
 
-                {/* Lista de clientes registrados */}
                 <optgroup label="Clientes Registrados">
                   {availableClients
                     .filter((c) => c.id !== finalConsumer?.id)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} {c.lastName} - DNI: {c.dni}
+                        {c.name} {c.lastName} – DNI: {c.dni}
                       </option>
                     ))}
                 </optgroup>

@@ -5,12 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   ArrowLeft,
-  User,
   Phone,
   MapPin,
   CreditCard,
   AlertCircle,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface ClientDetail {
   id: string;
@@ -35,7 +35,7 @@ export default function ClientDetailPage() {
         const { data } = await api.get(`/clients/${id}`);
         setClient(data);
       } catch (error) {
-        console.error("Error al cargar detalle:", error);
+        toast.error("Error al cargar detalle");
       } finally {
         setLoading(false);
       }

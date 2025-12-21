@@ -5,6 +5,7 @@ import { Users, UserPlus, Search, RefreshCw } from "lucide-react";
 import AddNewClient from "@/components/clientes/AddNewClient";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface Customer {
   id: string | number;
@@ -29,7 +30,7 @@ export default function CustomersPage() {
       const response = await api.get("/clients");
       setCustomers(response.data);
     } catch (error) {
-      console.error("Error cargando clientes");
+      toast.error("Error cargando clientes");
     } finally {
       setLoading(false);
     }
