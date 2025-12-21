@@ -58,11 +58,40 @@ export default function SalesPage() {
     if (!sale) createSale();
   };
 
-  const handleCancel = async () => {
-    if (confirm("¿Cancelar la venta actual?")) {
-      await cancelSale();
-      setIsVentaIniciada(false);
-    }
+  const handleCancel = () => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="font-semibold text-gray-800">
+            ¿Cancelar la venta actual?
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                await cancelSale();
+                setIsVentaIniciada(false);
+                toast.success("Venta cancelada");
+              }}
+              className="flex-1 bg-red-600 text-white py-2 rounded-xl font-bold"
+            >
+              Sí, cancelar
+            </button>
+
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl font-bold"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+      }
+    );
   };
 
   const handlePrint = async () => {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSales, PaymentMethod } from "@/context/SalesContext";
 import { CheckCircle2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function PaymentModal() {
   const { sale, registerPayment } = useSales();
@@ -30,7 +31,7 @@ export default function PaymentModal() {
 
   const handlePay = async () => {
     if (amount <= 0 || amount > pendingBalance) {
-      alert("Monto inválido");
+      toast.error("Monto inválido");
       return;
     }
     await registerPayment(amount, method);

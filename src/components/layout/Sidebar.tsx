@@ -14,6 +14,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const menuItems = [
   // { label: "Inicio", href: "/dashboard", icon: HomeIcon },
@@ -30,8 +31,37 @@ export default function Sidebar() {
   const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
-    document.cookie = "token=; Max-Age=0; path=/";
-    router.push("/login");
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-3">
+          <p className="font-semibold text-gray-800">¿Querés cerrar sesión?</p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                document.cookie = "token=; Max-Age=0; path=/";
+                router.push("/login");
+                toast.success("Sesión cerrada correctamente");
+              }}
+              className="flex-1 bg-red-600 text-white py-2 rounded-xl font-bold"
+            >
+              Cerrar sesión
+            </button>
+
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl font-bold"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+      }
+    );
   };
 
   return (

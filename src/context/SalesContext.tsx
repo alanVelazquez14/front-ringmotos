@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export type SaleStatus = "OPEN" | "PAID" | "CANCELLED";
 
@@ -115,7 +116,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
         };
       });
     } catch (error) {
-      console.error("Error al agregar item:", error);
+      toast.error("Error al agregar item");
     } finally {
       setLoading(false);
     }
@@ -137,10 +138,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
       const res = await api.get(`/sales/${sale.id}`);
       setSale(res.data);
     } catch (error) {
-      console.error(
-        "Error en el back, pero ya lo quitamos de la vista:",
-        error
-      );
+      toast.error("Error en el back, pero ya lo quitamos de la vista:");
     }
   };
 
@@ -167,7 +165,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const res = await api.post(`/payments`, {
-        saleId: sale.id, // Probablemente se pase por body
+        saleId: sale.id,
         amount,
         method,
       });
@@ -185,7 +183,6 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
       await api.post(`/remitos`, {
         saleId: sale.id,
       });
-      // Aquí podrías actualizar la venta si el remito cambia su estado
     } finally {
       setLoading(false);
     }
@@ -213,7 +210,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
       const res = await api.patch(`/sales/${sale.id}/cancel`);
       setSale(null);
     } catch (error) {
-      console.error("Error al cancelar:", error);
+      toast.error("Error al cancelar la venta");
       setSale(null);
     } finally {
       setLoading(false);
@@ -235,7 +232,6 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     if (!sale) return;
     try {
       setLoading(true);
-      // 1. Confirmamos la venta (cambia estado a PAID/CLOSED)
       await api.patch(`/sales/${sale.id}/confirm`);
 
       // 2. Creamos el remito automáticamente
@@ -245,9 +241,9 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
       const resSale = await api.get(`/sales/${sale.id}`);
       setSale(resSale.data);
 
-      alert("Venta finalizada y remito generado");
+      toast.success("Venta finalizada y remito generado");
     } catch (error) {
-      console.error("Error al finalizar:", error);
+      toast.error("Error al finalizar la venta");
     } finally {
       setLoading(false);
     }
@@ -255,7 +251,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
 
 const updateSaleClient = async (saleId: string, clientId: string) => {
   if (!saleId) {
-    console.error("No hay un ID de venta válido");
+    toast.error("No hay un ID de venta válido");
     return;
   }
 
@@ -264,7 +260,7 @@ const updateSaleClient = async (saleId: string, clientId: string) => {
 
     setSale(data);
   } catch (error) {
-    console.error("Error al actualizar el cliente de la venta:", error);
+    toast.error("Error al actualizar el cliente de la venta");
     throw error;
   }
 };

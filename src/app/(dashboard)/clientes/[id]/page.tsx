@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import DeleteClientModal from "@/components/clientes/DeleteClientModal";
 
 interface ClientDetail {
   id: string;
@@ -51,12 +52,21 @@ export default function ClientDetailPage() {
 
   return (
     <div className="mx-auto p-4 sm:p-6 space-y-6">
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors"
-      >
-        <ArrowLeft size={20} /> Volver a la lista
-      </button>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mt-5">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <ArrowLeft size={20} /> Volver a la lista
+        </button>
+
+        {/* COMPONENTE DE ELIMINAR */}
+        <DeleteClientModal
+          clientId={client.id}
+          clientName={`${client.name} ${client.lastName}`}
+          onSuccess={() => router.push("/clientes")}
+        />
+      </div>
 
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6">
         <div className="flex gap-4 items-center">

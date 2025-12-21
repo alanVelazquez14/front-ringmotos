@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { UserPlus, X, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function AddNewClient({
   onCancel,
@@ -27,15 +28,14 @@ export default function AddNewClient({
 
     try {
       await api.post("/clients", formData);
-      console.log(formData);
 
-      alert("Cliente registrado con éxito");
+      toast.success("Cliente registrado con éxito");
       onSuccess();
     } catch (error: any) {
       console.error("Error al registrar cliente:", error);
       const msg =
         error.response?.data?.message || "Error interno del servidor (500)";
-      alert(`No se pudo registrar: ${msg}`);
+      toast.error(`No se pudo registrar: ${msg}`);
     } finally {
       setLoading(false);
     }
