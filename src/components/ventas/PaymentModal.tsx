@@ -89,9 +89,9 @@ export default function PaymentModal() {
           onChange={(e) => setMethod(e.target.value as PaymentMethod)}
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium bg-white focus:ring-2 focus:ring-blue-500 outline-none"
         >
-          <option value="CASH">💵 Efectivo</option>
-          <option value="TRANSFER">🏦 Transferencia</option>
-          <option value="CARD">💳 Tarjeta</option>
+          <option value="EFECTIVO">💵 Efectivo</option>
+          <option value="TRANSFERENCIA">🏦 Transferencia</option>
+          <option value="TARJETA">💳 Tarjeta</option>
         </select>
 
         <button

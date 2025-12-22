@@ -20,7 +20,7 @@ const menuItems = [
   // { label: "Inicio", href: "/dashboard", icon: HomeIcon },
   { label: "Ventas", href: "/ventas", icon: ShoppingCart },
   { label: "Caja", href: "/caja", icon: Wallet },
-  { label: "Cuenta Corriente", href: "/cuenta-corriente", icon: CreditCard },
+  // { label: "Cuenta Corriente", href: "/cuenta-corriente", icon: CreditCard },
   { label: "Clientes", href: "/clientes", icon: Users },
   { label: "Reportes", href: "/reportes", icon: ChartCandlestick },
   { label: "Registro", href: "/registro", icon: UserRoundPlus },

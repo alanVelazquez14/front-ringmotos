@@ -197,7 +197,7 @@ export default function SalesPage() {
 
       {/* UI DE PANTALLA (Oculta en impresión) */}
       <div className="print:hidden space-y-6">
-         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center bg-white p-4 sm:p-5 rounded-2xl shadow-sm border">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center bg-white p-4 sm:p-5 rounded-2xl shadow-sm border">
           <div>
             <h1 className="text-2xl font-black">
               {isClosed ? "Venta Finalizada" : "Nueva Venta"}
@@ -205,7 +205,8 @@ export default function SalesPage() {
             <p className="text-xs font-mono text-gray-400">ID: {sale.id}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-red-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+            <button
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-red-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
               onClick={handleCancel}
               disabled={isClosed}
             >
@@ -215,7 +216,7 @@ export default function SalesPage() {
               <button
                 onClick={handleFinalizeSale}
                 disabled={!sale.items?.length || isConfirming}
-          className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 {isConfirming ? (
                   <Loader2 className="animate-spin" size={20} />
@@ -227,7 +228,7 @@ export default function SalesPage() {
             ) : (
               <button
                 onClick={handlePrint}
-                 className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2"
               >
                 <Printer size={20} /> Imprimir
               </button>

@@ -126,19 +126,29 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const removeItem = async (itemId: string) => {
     if (!sale || !itemId) return;
 
-    const originalSale = { ...sale };
+    const originalSale = sale;
+
     setSale((prev) => {
       if (!prev) return null;
-      const newItems = prev.items.filter((i) => i.id !== itemId);
-      return { ...prev, items: newItems };
+      return {
+        ...prev,
+        items: prev.items.filter((i) => i.id !== itemId),
+      };
     });
 
     try {
       await api.delete(`/sales/items/${itemId}`);
+    } catch {
+      setSale(originalSale);
+      toast.error("Error al eliminar item");
+      return;
+    }
+
+    try {
       const res = await api.get(`/sales/${sale.id}`);
       setSale(res.data);
-    } catch (error) {
-      toast.error("Error en el back, pero ya lo quitamos de la vista:");
+    } catch {
+      console.warn("No se pudo refrescar la venta");
     }
   };
 
@@ -162,14 +172,30 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   //Registrar pago de la venta
   const registerPayment = async (amount: number, method: PaymentMethod) => {
     if (!sale) return;
+
     try {
       setLoading(true);
-      const res = await api.post(`/payments`, {
-        saleId: sale.id,
+
+      const res = await api.post(`/pos/ventas/${sale.id}/pagos`, {
         amount,
-        method,
+        paymentMethod: method,
+        receivedBy: "USER_ID_DEL_LOGUEADO",
+        cashRegisterId: "CAJA_ACTUAL_ID",
+        allocations: [
+          {
+            saleId: sale.id,
+            amount,
+          },
+        ],
       });
+
       setSale(res.data);
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Error al registrar el pago");
+      }
     } finally {
       setLoading(false);
     }
@@ -249,21 +275,21 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-const updateSaleClient = async (saleId: string, clientId: string) => {
-  if (!saleId) {
-    toast.error("No hay un ID de venta válido");
-    return;
-  }
+  const updateSaleClient = async (saleId: string, clientId: string) => {
+    if (!saleId) {
+      toast.error("No hay un ID de venta válido");
+      return;
+    }
 
-  try {
-    const { data } = await api.patch(`/sales/${saleId}`, { clientId });
+    try {
+      const { data } = await api.patch(`/sales/${saleId}`, { clientId });
 
-    setSale(data);
-  } catch (error) {
-    toast.error("Error al actualizar el cliente de la venta");
-    throw error;
-  }
-};
+      setSale(data);
+    } catch (error) {
+      toast.error("Error al actualizar el cliente de la venta");
+      throw error;
+    }
+  };
 
   return (
     <SalesContext.Provider
