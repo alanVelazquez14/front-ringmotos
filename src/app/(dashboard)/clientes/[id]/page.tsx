@@ -13,6 +13,15 @@ import {
 import toast from "react-hot-toast";
 import DeleteClientModal from "@/components/clientes/DeleteClientModal";
 
+interface AccountEntry {
+  id: string;
+  type: "DEBIT" | "CREDIT"; // DEBIT suele ser venta (deuda), CREDIT es pago
+  amount: string;
+  description: string;
+  createdAt: string;
+  balanceAfter: number; // Si tu API devuelve el saldo parcial
+}
+
 interface ClientDetail {
   id: string;
   name: string;
@@ -21,22 +30,28 @@ interface ClientDetail {
   phone: string;
   adress: string;
   balance: number;
-  sales?: any[];
 }
 
 export default function ClientDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [client, setClient] = useState<ClientDetail | null>(null);
+  const [entries, setEntries] = useState<AccountEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        const { data } = await api.get(`/clients/${id}`);
-        setClient(data);
+        // Traemos datos del cliente y su historial en paralelo
+        const [clientRes, historyRes] = await Promise.all([
+          api.get(`/clients/${id}`),
+          api.get(`/account-entries/history/${id}`)
+        ]);
+        
+        setClient(clientRes.data);
+        setEntries(historyRes.data);
       } catch (error) {
-        toast.error("Error al cargar detalle");
+        toast.error("Error al cargar datos del cliente");
       } finally {
         setLoading(false);
       }
@@ -44,23 +59,22 @@ export default function ClientDetailPage() {
     fetchClientData();
   }, [id]);
 
-  if (loading) return <p className="p-10 text-center">Cargando perfil...</p>;
-  if (!client)
-    return <p className="p-10 text-center">Cliente no encontrado.</p>;
+  if (loading) return <p className="p-10 text-center text-slate-500 italic">Cargando perfil...</p>;
+  if (!client) return <p className="p-10 text-center">Cliente no encontrado.</p>;
 
   const hasDebt = (client.balance || 0) > 0;
 
   return (
-    <div className="mx-auto p-4 sm:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mt-5">
+    <div className="mx-auto sm:p-6 space-y-6">
+      {/* HEADER ACTIONS */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mt-10">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors"
+          className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors font-medium"
         >
           <ArrowLeft size={20} /> Volver a la lista
         </button>
 
-        {/* COMPONENTE DE ELIMINAR */}
         <DeleteClientModal
           clientId={client.id}
           clientName={`${client.name} ${client.lastName}`}
@@ -68,11 +82,11 @@ export default function ClientDetailPage() {
         />
       </div>
 
+      {/* CLIENT CARD */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6">
         <div className="flex gap-4 items-center">
           <div className="h-20 w-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-            {client.name[0]}
-            {client.lastName[0]}
+            {client.name[0]}{client.lastName[0]}
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -86,75 +100,96 @@ export default function ClientDetailPage() {
 
         <div className="flex flex-col justify-center gap-2">
           <div className="flex items-center gap-2 text-gray-600">
-            <Phone size={18} className="text-blue-500" />{" "}
-            {client.phone || "Sin teléfono"}
+            <Phone size={18} className="text-blue-500" /> {client.phone || "Sin teléfono"}
           </div>
           <div className="flex items-center gap-2 text-gray-600">
-            <MapPin size={18} className="text-blue-500" />{" "}
-            {client.adress || "Sin dirección"}
+            <MapPin size={18} className="text-blue-500" /> {client.adress || "Sin dirección"}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div
-          className={`col-span-1 p-6 rounded-3xl border flex flex-col justify-between ${
-            hasDebt
-              ? "bg-red-50 border-red-100"
-              : "bg-green-50 border-green-100"
+      {/* DASHBOARD GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* BALANCE CARD */}
+        <div className={`p-6 rounded-3xl border flex flex-col justify-between h-fit ${
+            hasDebt ? "bg-red-50 border-red-100" : "bg-green-50 border-green-100"
           }`}
         >
           <div>
-            <p
-              className={`text-sm font-bold uppercase tracking-wider ${
-                hasDebt ? "text-red-400" : "text-green-500"
-              }`}
-            >
+            <p className={`text-sm font-bold uppercase tracking-wider ${hasDebt ? "text-red-400" : "text-green-500"}`}>
               Estado de Cuenta
             </p>
-            <h2
-              className={`text-4xl font-black mt-2 ${
-                hasDebt ? "text-red-600" : "text-green-700"
-              }`}
-            >
-              ${(client.balance || 0).toLocaleString()}
+            <h2 className={`text-4xl font-black mt-2 ${hasDebt ? "text-red-600" : "text-green-700"}`}>
+              ${(client.balance || 0).toLocaleString("es-AR")}
             </h2>
           </div>
-          <div className="mt-4 flex items-center gap-2">
-            {hasDebt ? (
-              <AlertCircle className="text-red-500" size={20} />
-            ) : (
-              <CreditCard className="text-green-500" size={20} />
-            )}
-            <p
-              className={`text-sm font-medium ${
-                hasDebt ? "text-red-600" : "text-green-700"
-              }`}
-            >
+          <div className="mt-6 flex items-center gap-2">
+            {hasDebt ? <AlertCircle className="text-red-500" size={20} /> : <CreditCard className="text-green-500" size={20} />}
+            <p className={`text-sm font-semibold ${hasDebt ? "text-red-600" : "text-green-700"}`}>
               {hasDebt ? "Saldo pendiente de pago" : "Cuenta al día"}
             </p>
           </div>
         </div>
 
-        {/* HISTORIAL DE VENTAS (Resumen) */}
-        <div className="md:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Últimos Movimientos
-          </h3>
-          <div className="space-y-3">
-            {/* Aquí puedes mapear las ventas reales del cliente si tu API las trae */}
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-              <div>
-                <p className="font-bold text-sm text-gray-700">Venta #1234</p>
-                <p className="text-xs text-gray-400">20/12/2025</p>
-              </div>
-              <p className="font-bold text-blue-600">$45.000</p>
-            </div>
-            <p className="text-center text-gray-400 text-sm mt-4 italic">
-              El historial detallado se está cargando...
-            </p>
+        {/* MOVIMIENTOS DE CUENTA CORRIENTE */}
+        <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-50">
+            <h3 className="text-lg font-bold text-gray-800">Historial de Cuenta Corriente</h3>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                  <th className="px-6 py-4 hidden md:table-cell">Fecha</th>
+                  <th className="px-6 py-4">Detalle</th>
+                  <th className="px-6 py-4 text-right">Monto</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {entries.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-10 text-center text-gray-400 italic text-sm">
+                      No hay movimientos registrados para este cliente.
+                    </td>
+                  </tr>
+                ) : (
+                  entries.map((entry) => (
+                    <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
+                      {/* Fecha Desktop */}
+                      <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell">
+                        {new Date(entry.createdAt).toLocaleDateString("es-AR")}
+                      </td>
+
+                      {/* Detalle (con fecha en mobile) */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-700">
+                            {entry.description || (entry.type === "DEBIT" ? "Venta a Crédito" : "Entrega de Efectivo")}
+                          </span>
+                          <span className="text-[11px] text-gray-400 md:hidden mt-0.5">
+                            {new Date(entry.createdAt).toLocaleDateString("es-AR")}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Monto */}
+                      <td className="px-6 py-4 text-right">
+                        <span className={`text-sm font-black ${
+                          entry.type === "DEBIT" ? "text-red-500" : "text-emerald-500"
+                        }`}>
+                          {entry.type === "DEBIT" ? "+" : "-"} ${parseFloat(entry.amount).toLocaleString("es-AR")}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+
       </div>
     </div>
   );

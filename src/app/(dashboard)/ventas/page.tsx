@@ -56,9 +56,11 @@ export default function SalesPage() {
     try {
       if (sale?.id) {
         await updateSaleClient(sale.id, clientId);
+        toast.success("Cliente actualizado");
       }
     } catch (error) {
-      toast.error("No se pudo actualizar el cliente");
+      console.error("Error updating client:", error);
+      toast.error("No se pudo vincular el cliente a esta venta");
     }
   };
 
@@ -244,13 +246,24 @@ export default function SalesPage() {
               </label>
               <select
                 disabled={isClosed}
+                // Forzamos el valor al id del cliente actual o al consumidor final por defecto
                 value={sale.clientId || finalConsumer?.id || ""}
                 onChange={(e) => handleClientChange(e.target.value)}
-                className="w-full p-3 bg-gray-50 rounded-xl outline-none"
+                className="w-full p-3 bg-gray-50 rounded-xl outline-none border border-transparent focus:border-black transition-all font-bold"
               >
-                {finalConsumer && (
-                  <option value={finalConsumer.id}>{finalConsumer.name}</option>
+                {/* Opción por defecto siempre presente para evitar saltos */}
+                {!sale.clientId && !finalConsumer && (
+                  <option value="" disabled>
+                    Seleccione un cliente
+                  </option>
                 )}
+
+                {finalConsumer && (
+                  <option value={finalConsumer.id}>
+                    👤 {finalConsumer.name} (Final)
+                  </option>
+                )}
+
                 {availableClients.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} {c.lastName}
