@@ -3,8 +3,9 @@
 import { createContext, useContext, useState } from "react";
 import { api } from "@/lib/api";
 import toast from "react-hot-toast";
+import { getUserIdFromToken } from "@/helpers/auth";
 
-export type SaleStatus = "OPEN" | "PAID" | "CANCELLED";
+export type SaleStatus = "DRAFT" | "CONFIRMED" | "CANCELLED";
 
 export type SaleItem = {
   id?: string;
@@ -46,7 +47,7 @@ type SalesContextType = {
   sale: Sale | null;
   loading: boolean;
 
-  createSale: () => Promise<void>;
+  createSale: (clientId: string) => Promise<void>;
   addItem: (item: {
     qty: number;
     unitPrice: number;
@@ -61,7 +62,6 @@ type SalesContextType = {
   createRemito: () => Promise<void>;
   markRemitoAsPrinted: (remitoId: string) => Promise<void>;
   finalizeAndRemit: () => Promise<void>;
-  updateSaleClient: (saleId: string, clientId: string) => Promise<void>;
 };
 
 const SalesContext = createContext<SalesContextType | null>(null);
@@ -71,15 +71,23 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   //Crear nueva venta
-  const createSale = async () => {
+  const createSale = async (clientId: string) => {
+    // Ahora acepta un clientId
     try {
       setLoading(true);
 
       const res = await api.post("/sales", {
-        clientId: null,
+        clientId: clientId,
       });
+      console.log(
+        "DEBUG: Respuesta de GET /sales (Generación de ID):",
+        res.data
+      );
 
       setSale(res.data);
+    } catch (error) {
+      console.error("Error al crear venta:", error);
+      toast.error("Error al iniciar la venta en el servidor");
     } finally {
       setLoading(false);
     }
@@ -171,31 +179,32 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
 
   //Registrar pago de la venta
   const registerPayment = async (amount: number, method: PaymentMethod) => {
-    if (!sale) return;
+    if (!sale?.id) return;
 
+    const userId = getUserIdFromToken();
+
+    if (!sale?.id) {
+      console.warn(
+        "DEBUG: No se inició el pago porque sale.id es null o undefined"
+      );
+      toast.error("Error: No hay una venta activa seleccionada");
+      return;
+    }
     try {
       setLoading(true);
-
-      const res = await api.post(`/pos/ventas/${sale.id}/pagos`, {
+      const res = await api.post(`/pos/sales/${sale.id}/action`, {
+        action: "PAYMENT",
         amount,
         paymentMethod: method,
-        receivedBy: "USER_ID_DEL_LOGUEADO",
-        cashRegisterId: "CAJA_ACTUAL_ID",
-        allocations: [
-          {
-            saleId: sale.id,
-            amount,
-          },
-        ],
+        receivedBy: userId,
       });
 
       setSale(res.data);
+      toast.success("Pago registrado correctamente");
     } catch (error: any) {
-      if (error.response?.status === 409) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Error al registrar el pago");
-      }
+      toast.error(
+        error.response?.data?.message || "Error al registrar el pago"
+      );
     } finally {
       setLoading(false);
     }
@@ -230,19 +239,15 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   };
 
   const cancelSale = async () => {
-    if (!sale) return;
+    if (!sale?.id) return;
+
     try {
-      setLoading(true);
-      const res = await api.patch(`/sales/${sale.id}/cancel`);
       setSale(null);
+      toast.success("Venta cancelada");
     } catch (error) {
-      toast.error("Error al cancelar la venta");
-      setSale(null);
-    } finally {
-      setLoading(false);
+      console.error("Error:", error);
     }
   };
-
   const confirmSale = async () => {
     if (!sale) return;
     try {
@@ -260,10 +265,8 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       await api.patch(`/sales/${sale.id}/confirm`);
 
-      // 2. Creamos el remito automáticamente
       const resRemito = await api.post(`/remitos`, { saleId: sale.id });
 
-      // 3. Actualizamos la venta local para obtener los datos nuevos
       const resSale = await api.get(`/sales/${sale.id}`);
       setSale(resSale.data);
 
@@ -275,21 +278,22 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateSaleClient = async (saleId: string, clientId: string) => {
-    if (!saleId) {
-      toast.error("No hay un ID de venta válido");
-      return;
-    }
+  // const updateSaleClient = async (saleId: string, clientId: string) => {
+  //   if (!saleId) {
+  //     toast.error("No hay un ID de venta válido");
+  //     return;
+  //   }
 
-    try {
-      const { data } = await api.patch(`/sales/${saleId}`, { clientId });
+  //   try {
+  //     const { data } = await api.patch(`/sales/${saleId}`, { clientId });
 
-      setSale(data);
-    } catch (error) {
-      toast.error("Error al actualizar el cliente de la venta");
-      throw error;
-    }
-  };
+  //     setSale(data);
+  //     toast.success("Cliente actualizado");
+  //   } catch (error) {
+  //     toast.error("Error al actualizar el cliente");
+  //     throw error;
+  //   }
+  // };
 
   return (
     <SalesContext.Provider
@@ -307,7 +311,6 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
         createRemito,
         markRemitoAsPrinted,
         finalizeAndRemit,
-        updateSaleClient,
       }}
     >
       {children}

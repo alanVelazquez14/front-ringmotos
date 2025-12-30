@@ -12,14 +12,15 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DeleteClientModal from "@/components/clientes/DeleteClientModal";
+import PaymentClientModal from "@/components/clientes/PaymentClientModal";
 
 interface AccountEntry {
   id: string;
-  type: "DEBIT" | "CREDIT"; // DEBIT suele ser venta (deuda), CREDIT es pago
-  amount: string;
+  type: "CHARGE" | "PAYMENT";
+  amount: number;
   description: string;
   createdAt: string;
-  balanceAfter: number; // Si tu API devuelve el saldo parcial
+  balanceAfter: number;
 }
 
 interface ClientDetail {
@@ -45,9 +46,9 @@ export default function ClientDetailPage() {
         // Traemos datos del cliente y su historial en paralelo
         const [clientRes, historyRes] = await Promise.all([
           api.get(`/clients/${id}`),
-          api.get(`/account-entries/history/${id}`)
+          api.get(`/account-entries/history/${id}`),
         ]);
-        
+
         setClient(clientRes.data);
         setEntries(historyRes.data);
       } catch (error) {
@@ -59,10 +60,34 @@ export default function ClientDetailPage() {
     fetchClientData();
   }, [id]);
 
-  if (loading) return <p className="p-10 text-center text-slate-500 italic">Cargando perfil...</p>;
-  if (!client) return <p className="p-10 text-center">Cliente no encontrado.</p>;
+  if (loading)
+    return (
+      <p className="p-10 text-center text-slate-500 italic">
+        Cargando perfil...
+      </p>
+    );
+  if (!client)
+    return <p className="p-10 text-center">Cliente no encontrado.</p>;
 
-  const hasDebt = (client.balance || 0) > 0;
+  const balance =
+    entries.length > 0 ? entries[entries.length - 1].balanceAfter : 0;
+
+const isDeudor = balance < 0;
+const isAcreedor = balance > 0;
+
+  const refreshData = async () => {
+    setLoading(true);
+    try {
+      const [clientRes, historyRes] = await Promise.all([
+        api.get(`/clients/${id}`),
+        api.get(`/account-entries/history/${id}`),
+      ]);
+      setClient(clientRes.data);
+      setEntries(historyRes.data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto sm:p-6 space-y-6">
@@ -86,7 +111,8 @@ export default function ClientDetailPage() {
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between gap-6">
         <div className="flex gap-4 items-center">
           <div className="h-20 w-20 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-            {client.name[0]}{client.lastName[0]}
+            {client.name[0]}
+            {client.lastName[0]}
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -100,34 +126,81 @@ export default function ClientDetailPage() {
 
         <div className="flex flex-col justify-center gap-2">
           <div className="flex items-center gap-2 text-gray-600">
-            <Phone size={18} className="text-blue-500" /> {client.phone || "Sin teléfono"}
+            <Phone size={18} className="text-blue-500" />{" "}
+            {client.phone || "Sin teléfono"}
           </div>
           <div className="flex items-center gap-2 text-gray-600">
-            <MapPin size={18} className="text-blue-500" /> {client.adress || "Sin dirección"}
+            <MapPin size={18} className="text-blue-500" />{" "}
+            {client.adress || "Sin dirección"}
           </div>
         </div>
       </div>
 
       {/* DASHBOARD GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* BALANCE CARD */}
-        <div className={`p-6 rounded-3xl border flex flex-col justify-between h-fit ${
-            hasDebt ? "bg-red-50 border-red-100" : "bg-green-50 border-green-100"
+        <div
+          className={`p-6 rounded-3xl border flex flex-col justify-between h-fit ${
+            isDeudor
+              ? "bg-red-50 border-red-100"
+              : isAcreedor
+              ? "bg-blue-50 border-blue-100"
+              : "bg-green-50 border-green-100"
           }`}
         >
           <div>
-            <p className={`text-sm font-bold uppercase tracking-wider ${hasDebt ? "text-red-400" : "text-green-500"}`}>
-              Estado de Cuenta
+            <p
+              className={`text-sm font-bold uppercase tracking-wider ${
+                isDeudor
+                  ? "text-red-400"
+                  : isAcreedor
+                  ? "text-blue-400"
+                  : "text-green-500"
+              }`}
+            >
+              {isDeudor
+                ? "Saldo Deudor"
+                : isAcreedor
+                ? "Saldo a Favor"
+                : "Cuenta al día"}
             </p>
-            <h2 className={`text-4xl font-black mt-2 ${hasDebt ? "text-red-600" : "text-green-700"}`}>
-              ${(client.balance || 0).toLocaleString("es-AR")}
+            <h2
+              className={`text-4xl font-black mt-2 ${
+                isDeudor
+                  ? "text-red-600"
+                  : isAcreedor
+                  ? "text-blue-700"
+                  : "text-green-700"
+              }`}
+            >
+              ${Math.abs(balance).toLocaleString("es-AR")}
             </h2>
           </div>
+
+          {isDeudor && (
+            <PaymentClientModal
+              clientId={client.id}
+              totalDebt={balance}
+              onSuccess={refreshData}
+            />
+          )}
+
           <div className="mt-6 flex items-center gap-2">
-            {hasDebt ? <AlertCircle className="text-red-500" size={20} /> : <CreditCard className="text-green-500" size={20} />}
-            <p className={`text-sm font-semibold ${hasDebt ? "text-red-600" : "text-green-700"}`}>
-              {hasDebt ? "Saldo pendiente de pago" : "Cuenta al día"}
+            {isDeudor ? (
+              <AlertCircle className="text-red-500" size={20} />
+            ) : (
+              <CreditCard className="text-green-500" size={20} />
+            )}
+            <p
+              className={`text-sm font-semibold ${
+                isDeudor ? "text-red-600" : "text-green-700"
+              }`}
+            >
+              {isDeudor
+                ? "El cliente debe dinero"
+                : isAcreedor
+                ? "El cliente tiene dinero extra"
+                : "Sin movimientos pendientes"}
             </p>
           </div>
         </div>
@@ -135,7 +208,9 @@ export default function ClientDetailPage() {
         {/* MOVIMIENTOS DE CUENTA CORRIENTE */}
         <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-50">
-            <h3 className="text-lg font-bold text-gray-800">Historial de Cuenta Corriente</h3>
+            <h3 className="text-lg font-bold text-gray-800">
+              Historial de Cuenta Corriente
+            </h3>
           </div>
 
           <div className="overflow-x-auto">
@@ -150,13 +225,19 @@ export default function ClientDetailPage() {
               <tbody className="divide-y divide-gray-50">
                 {entries.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-10 text-center text-gray-400 italic text-sm">
+                    <td
+                      colSpan={3}
+                      className="px-6 py-10 text-center text-gray-400 italic text-sm"
+                    >
                       No hay movimientos registrados para este cliente.
                     </td>
                   </tr>
                 ) : (
                   entries.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr
+                      key={entry.id}
+                      className="hover:bg-slate-50/50 transition-colors"
+                    >
                       {/* Fecha Desktop */}
                       <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell">
                         {new Date(entry.createdAt).toLocaleDateString("es-AR")}
@@ -166,20 +247,30 @@ export default function ClientDetailPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-gray-700">
-                            {entry.description || (entry.type === "DEBIT" ? "Venta a Crédito" : "Entrega de Efectivo")}
+                            {entry.description ||
+                              (entry.type === "CHARGE"
+                                ? "Venta a Crédito"
+                                : "Entrega de Efectivo")}
                           </span>
                           <span className="text-[11px] text-gray-400 md:hidden mt-0.5">
-                            {new Date(entry.createdAt).toLocaleDateString("es-AR")}
+                            {new Date(entry.createdAt).toLocaleDateString(
+                              "es-AR"
+                            )}
                           </span>
                         </div>
                       </td>
 
                       {/* Monto */}
                       <td className="px-6 py-4 text-right">
-                        <span className={`text-sm font-black ${
-                          entry.type === "DEBIT" ? "text-red-500" : "text-emerald-500"
-                        }`}>
-                          {entry.type === "DEBIT" ? "+" : "-"} ${parseFloat(entry.amount).toLocaleString("es-AR")}
+                        <span
+                          className={`text-sm font-black ${
+                            entry.type === "CHARGE"
+                              ? "text-red-500"
+                              : "text-emerald-500"
+                          }`}
+                        >
+                          {entry.type === "CHARGE" ? "-" : "+"} $
+                          {entry.amount.toLocaleString("es-AR")}
                         </span>
                       </td>
                     </tr>
@@ -189,7 +280,6 @@ export default function ClientDetailPage() {
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );

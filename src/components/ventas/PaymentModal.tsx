@@ -4,9 +4,19 @@ import { useState, useEffect } from "react";
 import { useSales, PaymentMethod } from "@/context/SalesContext";
 import { CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { api } from "@/lib/api";
+import { getUserIdFromToken } from "@/helpers/auth";
 
-export default function PaymentModal() {
-  const { sale, registerPayment } = useSales();
+interface PaymentModalProps {
+  finalConsumerId?: string;
+  clientId?: string | null;
+}
+
+export default function PaymentModal({
+  finalConsumerId,
+  clientId,
+}: PaymentModalProps) {
+  const { sale, registerPayment, resetSale } = useSales();
   const [isTotal, setIsTotal] = useState(true);
   const [amount, setAmount] = useState(0);
   const [method, setMethod] = useState<PaymentMethod>("CASH");
@@ -30,17 +40,46 @@ export default function PaymentModal() {
   if (!sale || pendingBalance <= 0) return null;
 
   const handlePay = async () => {
-    if (amount <= 0 || amount > pendingBalance) {
-      toast.error("Monto inválido");
+    if (!sale?.id) return;
+    const userId = getUserIdFromToken();
+
+    if (!userId) {
+      toast.error("Usuario no identificado.");
       return;
     }
-    await registerPayment(amount, method);
-    if (!isTotal) setAmount(0);
-  };
+
+    const cleanAmount = Number(amount.toString().replace(/\./g, '').replace('$', ''));
+
+  if (isNaN(cleanAmount)) {
+    toast.error("El monto ingresado no es válido");
+    return;
+  }
+
+    try {
+      if (cleanAmount <= 0) {
+      await api.post(`/pos/sales/${sale.id}/action`, {
+        action: "NO_PAYMENT",
+        amount: 0,
+        paymentMethod: "CASH",
+        receivedBy: userId,
+      });
+      resetSale();
+      toast.success("Venta enviada a cuenta corriente");
+    } else {
+      await registerPayment(cleanAmount, method);
+      
+      resetSale();
+      toast.success("Pago total registrado con éxito");
+    }
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.message || "Error al procesar el pago";
+    toast.error(errorMsg);
+    console.error("Detalle del error:", error?.response?.data);
+  }
+};
 
   return (
     <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-      {/* Selector de modo */}
       <div className="flex bg-white rounded-xl p-1 shadow-sm mb-4 border border-gray-200">
         <button
           onClick={() => setIsTotal(true)}
