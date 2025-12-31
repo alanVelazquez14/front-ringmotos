@@ -119,7 +119,7 @@ export default function SalesPage() {
 
   if (!isVentaActiva && !loading) {
     return (
-      <div className="max-w-2xl mt-20 p-8 bg-white rounded-3xl border shadow-xl mx-auto">
+      <div className="max-w-2xl mt-20 p-8 bg-white rounded-3xl border shadow-xl">
         <div className="text-center mb-8">
           <div className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="text-blue-600" size={32} />
@@ -322,10 +322,10 @@ export default function SalesPage() {
             </h2>
             <div className="text-[10px] uppercase font-bold text-gray-500 space-y-1">
               <p className="flex items-center gap-2">
-                <MapPin size={12} /> Calle Ejemplo 123, Ciudad
+                <MapPin size={12} /> --
               </p>
               <p className="flex items-center gap-2">
-                <Phone size={12} /> +54 9 11 0000-0000
+                <Phone size={12} /> --
               </p>
             </div>
           </div>

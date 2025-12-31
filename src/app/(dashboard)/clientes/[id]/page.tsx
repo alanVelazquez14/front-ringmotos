@@ -43,7 +43,6 @@ export default function ClientDetailPage() {
   useEffect(() => {
     const fetchClientData = async () => {
       try {
-        // Traemos datos del cliente y su historial en paralelo
         const [clientRes, historyRes] = await Promise.all([
           api.get(`/clients/${id}`),
           api.get(`/account-entries/history/${id}`),
@@ -72,8 +71,8 @@ export default function ClientDetailPage() {
   const balance =
     entries.length > 0 ? entries[entries.length - 1].balanceAfter : 0;
 
-const isDeudor = balance < 0;
-const isAcreedor = balance > 0;
+  const isDeudor = balance > 0;
+  const isAcreedor = balance < 0;
 
   const refreshData = async () => {
     setLoading(true);

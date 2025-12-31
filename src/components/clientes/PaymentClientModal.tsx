@@ -4,7 +4,6 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { DollarSign, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { getUserIdFromToken } from "@/helpers/auth";
 
 interface PaymentModalProps {
   clientId: string;
@@ -22,37 +21,37 @@ export default function PaymentClientModal({
   const [loading, setLoading] = useState(false);
 
 const handlePayment = async () => {
+  const numericAmount = Number(amount);
+  
+  if (isNaN(numericAmount) || numericAmount <= 0) {
+    toast.error("El monto debe ser un número mayor a cero");
+    return;
+  }
+
   try {
     setLoading(true);
+        const entriesRes = await api.get(`/account-entries/client/${clientId}`);
     
-    const userId = getUserIdFromToken();
+    const pendingEntry = entriesRes.data.find((e: any) => 
+      e.type === "CHARGE" && e.sale && e.sale.id
+    );
 
-    if (!userId) {
-      toast.error("No se pudo identificar al vendedor");
+    if (!pendingEntry) {
+      toast.error("No se encontró una venta pendiente para confirmar");
       return;
     }
 
-    const entriesRes = await api.get(`/account-entries/client/${clientId}`);
-    const pendingSale = entriesRes.data.find((e: any) => e.type === "DEBIT");
+    const saleId = pendingEntry.sale.id;
 
-    const payload = {
-      amount: Number(amount),
-      paymentMethod: "CASH",
-      receivedBy: userId,
-      allocations: [
-        {
-          saleId: pendingSale?.id || "pago-a-cuenta",
-          amount: Number(amount),
-        },
-      ],
-    };
+    await api.patch(`/sales/${saleId}/confirm`);
 
-    await api.post("/payments", payload);
-    toast.success("Cobro realizado con éxito");
+    toast.success("Venta confirmada con éxito");
+    
     onSuccess();
     setIsOpen(false);
   } catch (error) {
-    toast.error("Error al procesar cobro");
+    console.error("Error al confirmar venta:", error);
+    toast.error("Error al procesar la confirmación");
   } finally {
     setLoading(false);
   }
