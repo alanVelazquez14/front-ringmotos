@@ -24,6 +24,11 @@ const menuItems = [
   { label: "Clientes", href: "/clientes", icon: Users },
   { label: "Reportes", href: "/reportes", icon: ChartCandlestick },
   { label: "Registro", href: "/registro", icon: UserRoundPlus },
+  {
+    label: "Presupuestos",
+    href: "/presupuestos",
+    icon: CreditCard,
+  },
 ];
 
 export default function Sidebar() {

@@ -30,27 +30,26 @@ const handlePayment = async () => {
 
   try {
     setLoading(true);
-        const entriesRes = await api.get(`/account-entries/client/${clientId}`);
-    
-    const pendingEntry = entriesRes.data.find((e: any) => 
-      e.type === "CHARGE" && e.sale && e.sale.id
-    );
+    const entriesRes = await api.get(`/account-entries/client/${clientId}`);
+    const pendingEntry = entriesRes.data.find((e: any) => e.type === "CHARGE" && e.sale?.id);
 
     if (!pendingEntry) {
-      toast.error("No se encontró una venta pendiente para confirmar");
+      toast.error("No se encontró una venta pendiente");
       return;
     }
 
     const saleId = pendingEntry.sale.id;
 
-    await api.patch(`/sales/${saleId}/confirm`);
+    await api.patch(`/sales/${saleId}/confirm`, {
+      amount: numericAmount 
+    });
 
     toast.success("Venta confirmada con éxito");
     
-    onSuccess();
+    await onSuccess(); 
     setIsOpen(false);
   } catch (error) {
-    console.error("Error al confirmar venta:", error);
+    console.error("Error:", error);
     toast.error("Error al procesar la confirmación");
   } finally {
     setLoading(false);
