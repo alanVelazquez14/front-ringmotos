@@ -316,20 +316,14 @@ export default function SalesPage() {
         className="hidden print:block bg-white text-black font-sans"
       >
         <div className="flex justify-between items-start border-b-4 border-black pb-6 mb-8">
-          <div>
-            <h2 className="text-5xl font-black tracking-tighter mb-2">
-              RING MOTOS
-            </h2>
-            <div className="text-[10px] uppercase font-bold text-gray-500 space-y-1">
-              <p className="flex items-center gap-2">
-                <MapPin size={12} /> --
-              </p>
-              <p className="flex items-center gap-2">
-                <Phone size={12} /> --
-              </p>
-            </div>
+          <div className="w-1/3 flex justify-start">
+            <img
+              src="/LogoRingMotos.jpeg"
+              alt="Ring Motos"
+              className="h-28 w-auto object-contain"
+            />
           </div>
-          <div className="text-right">
+          <div className="w-1/3 text-center">
             <div className="border-4 border-black px-6 py-2 mb-2 inline-block font-black text-4xl">
               R
             </div>
@@ -340,6 +334,14 @@ export default function SalesPage() {
             <p className="font-bold">
               Fecha: {new Date().toLocaleDateString()}
             </p>
+          </div>
+
+          <div className="w-1/3 flex justify-end">
+            <img
+              src="/LogoBiliMotos2.jpeg"
+              alt="Bili Motos"
+              className="h-24 w-auto object-contain"
+            />
           </div>
         </div>
 
