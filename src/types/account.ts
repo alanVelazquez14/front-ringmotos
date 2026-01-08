@@ -23,4 +23,5 @@ export type AccountEntry = {
   status: "ACTIVE";
   sale: AccountEntrySale | null;
   payment: any | null;
+  saleId?: string;
 };

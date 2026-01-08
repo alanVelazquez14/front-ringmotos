@@ -41,42 +41,35 @@ export default function PaymentModal({
 
   const handlePay = async () => {
     if (!sale?.id) return;
-    const userId = getUserIdFromToken();
 
-    if (!userId) {
-      toast.error("Usuario no identificado.");
-      return;
-    }
-
-    const cleanAmount = Number(amount.toString().replace(/\./g, '').replace('$', ''));
-
-  if (isNaN(cleanAmount)) {
-    toast.error("El monto ingresado no es válido");
-    return;
-  }
+    const cleanAmount = Number(amount);
 
     try {
       if (cleanAmount <= 0) {
-      await api.post(`/pos/sales/${sale.id}/action`, {
-        action: "NO_PAYMENT",
-        amount: 0,
-        paymentMethod: "CASH",
-        receivedBy: userId,
-      });
+        await api.post(`/pos/sales/${sale.id}/action`, {
+          action: "NO_PAYMENT",
+        });
+        toast.success("Venta enviada a cuenta corriente");
+      } else {
+        await api.post(`/pos/sales/${sale.id}/action`, {
+          action: "PAY",
+          amount: cleanAmount,
+          paymentMethod: method,
+        });
+        toast.success("Pago registrado con éxito");
+      }
+
       resetSale();
-      toast.success("Venta enviada a cuenta corriente");
-    } else {
-      await registerPayment(cleanAmount, method);
-      
-      resetSale();
-      toast.success("Pago total registrado con éxito");
+    } catch (error: any) {
+      const serverError = error?.response?.data?.message;
+      const errorMsg = Array.isArray(serverError)
+        ? serverError.join(", ")
+        : serverError;
+
+      toast.error(errorMsg || "Error al procesar el pago");
+      console.error("Detalle técnico:", error?.response?.data);
     }
-  } catch (error: any) {
-    const errorMsg = error?.response?.data?.message || "Error al procesar el pago";
-    toast.error(errorMsg);
-    console.error("Detalle del error:", error?.response?.data);
-  }
-};
+  };
 
   return (
     <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">

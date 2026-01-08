@@ -32,6 +32,13 @@ export type Payment = {
   createdAt: string;
 };
 
+export type SaleSummary = {
+  entrega: string;
+  saldoVenta: string;
+  saldoAnterior: string;
+  saldoTotal: string;
+};
+
 export type Sale = {
   id: string;
   status: SaleStatus;
@@ -41,6 +48,7 @@ export type Sale = {
   subtotal: number;
   total: number;
   balance: number;
+  summary: SaleSummary;
 };
 
 type SalesContextType = {
@@ -71,23 +79,20 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   //Crear nueva venta
-  const createSale = async (clientId: string) => {
-    // Ahora acepta un clientId
+  const createSale = async (clientId: string | null) => {
     try {
       setLoading(true);
 
-      const res = await api.post("/sales", {
-        clientId: clientId,
-      });
-      console.log(
-        "DEBUG: Respuesta de GET /sales (Generación de ID):",
-        res.data
-      );
+      const payload = clientId ? { clientId } : {};
 
+      const res = await api.post("/sales", payload);
       setSale(res.data);
-    } catch (error) {
-      console.error("Error al crear venta:", error);
-      toast.error("Error al iniciar la venta en el servidor");
+    } catch (error: any) {
+      console.error("DETALLE DEL ERROR 500:", error.response?.data);
+      toast.error(
+        error.response?.data?.message ||
+          "Error interno del servidor al crear venta"
+      );
     } finally {
       setLoading(false);
     }
@@ -263,37 +268,21 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     if (!sale) return;
     try {
       setLoading(true);
+
       await api.patch(`/sales/${sale.id}/confirm`);
 
-      const resRemito = await api.post(`/remitos`, { saleId: sale.id });
+      await api.post(`/remitos`, { saleId: sale.id });
 
       const resSale = await api.get(`/sales/${sale.id}`);
       setSale(resSale.data);
 
-      toast.success("Venta finalizada y remito generado");
+      toast.success("Venta finalizada y remito listo");
     } catch (error) {
-      toast.error("Error al finalizar la venta");
+      toast.error("Error al procesar el remito final");
     } finally {
       setLoading(false);
     }
   };
-
-  // const updateSaleClient = async (saleId: string, clientId: string) => {
-  //   if (!saleId) {
-  //     toast.error("No hay un ID de venta válido");
-  //     return;
-  //   }
-
-  //   try {
-  //     const { data } = await api.patch(`/sales/${saleId}`, { clientId });
-
-  //     setSale(data);
-  //     toast.success("Cliente actualizado");
-  //   } catch (error) {
-  //     toast.error("Error al actualizar el cliente");
-  //     throw error;
-  //   }
-  // };
 
   return (
     <SalesContext.Provider

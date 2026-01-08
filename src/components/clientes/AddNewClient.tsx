@@ -17,7 +17,7 @@ export default function AddNewClient({
     dni: "",
     name: "",
     lastName: "",
-    adress: "",
+    address: "",
     phone: "",
     email: "",
   });
@@ -107,9 +107,9 @@ export default function AddNewClient({
           <input
             placeholder="Lote 41"
             className="w-full border-gray-200 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-            value={formData.adress}
+            value={formData.address}
             onChange={(e) =>
-              setFormData({ ...formData, adress: e.target.value })
+              setFormData({ ...formData, address: e.target.value })
             }
           />
         </div>

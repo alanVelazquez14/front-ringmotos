@@ -256,7 +256,7 @@ export default function SalesPage() {
                 ) : (
                   <CheckCircle />
                 )}
-                Confirmar y Facturar
+                Imprimir Remito
               </button>
             ) : (
               <button

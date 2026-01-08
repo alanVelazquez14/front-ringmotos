@@ -141,7 +141,7 @@ export default function CustomersPage() {
                     <div className="flex flex-col sm:items-end border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-50">
                       <p className="text-sm text-gray-600 flex items-center gap-2">
                         <span className="text-gray-300">📍</span>{" "}
-                        {c.adress || "Sin dirección"}
+                        {c.address || "Sin dirección"}
                       </p>
                       <p className="text-xs text-gray-400 mt-1 italic">
                         {c.email || "Sin email registrado"}

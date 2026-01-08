@@ -23,9 +23,9 @@ interface Item {
 }
 
 export default function PresupuestosPage() {
-  const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [availableClients, setAvailableClients] = useState<any[] | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const [validityDays, setValidityDays] = useState<number>(15); // Estado para la vigencia
+  const [validityDays, setValidityDays] = useState<number>(15);
   const [items, setItems] = useState<Item[]>([
     { id: Date.now(), description: "", qty: 1, unitPrice: 0 },
   ]);
@@ -59,7 +59,10 @@ export default function PresupuestosPage() {
   };
 
   const removeItem = (id: number) => {
-    if (items.length === 1) return;
+    if (items.length === 1) {
+      setItems([{ id: Date.now(), description: "", qty: 1, unitPrice: 0 }]);
+      return;
+    }
     setItems(items.filter((item) => item.id !== id));
   };
 
@@ -68,7 +71,7 @@ export default function PresupuestosPage() {
     0
   );
 
-  const selectedClientData = availableClients.find(
+  const selectedClientData = availableClients?.find(
     (c) => c.id === selectedClientId
   );
 
@@ -130,7 +133,7 @@ export default function PresupuestosPage() {
           </div>
           <button
             onClick={() => window.print()}
-            disabled={!selectedClientId || items[0].description === ""}
+            disabled={items[0].description === ""}
             className="px-8 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50"
           >
             <Printer size={20} /> Imprimir Presupuesto
@@ -151,7 +154,7 @@ export default function PresupuestosPage() {
                   className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none focus:border-blue-500 font-bold text-black"
                 >
                   <option value="">-- Buscar Cliente --</option>
-                  {availableClients.map((c) => (
+                  {availableClients?.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} {c.lastName}
                     </option>
