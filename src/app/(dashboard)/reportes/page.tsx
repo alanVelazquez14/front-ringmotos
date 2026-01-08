@@ -19,31 +19,51 @@ export default function ReportsPage() {
   const [byClient, setByClient] = useState<ClientSalesReport[]>([]);
   const [byUser, setByUser] = useState<UserSalesReport[]>([]);
 
-const loadReports = async () => {
-  try {
-    const [rangeRes, clientsRes, usersRes] = await Promise.all([
-      ReportsService.getSalesByRange(from, to),
-      ReportsService.getSalesByClient(from, to),
-      ReportsService.getSalesByUser(from, to),
-    ]);
+  const loadReportsByRange = async () => {
+    try {
+      const [rangeRes, clientsRes, usersRes] = await Promise.all([
+        ReportsService.getSalesByRange(from, to),
+        ReportsService.getSalesByClient(from, to),
+        ReportsService.getSalesByUser(from, to),
+      ]);
 
-    setRangeReport(rangeRes.data);
+      setRangeReport(rangeRes.data);
 
-    const fixedClients = clientsRes.data.map((c: any) => ({
-      ...c,
-      clientName: c.clientName || c.userName || "Cliente Desconocido"
-    }));
+      const fixedClients = clientsRes.data.map((c: any) => ({
+        ...c,
+        clientName: c.clientName || c.userName || "Cliente Desconocido",
+      }));
 
-    setByClient(fixedClients);
-    setByUser(usersRes.data);
+      setByClient(fixedClients);
+      setByUser(usersRes.data);
+    } catch (error) {
+      console.error("Error cargando reportes por rango", error);
+    }
+  };
 
-  } catch (error) {
-    console.error("Error cargando reportes", error);
-  }
-};
+  const loadInitialReports = async () => {
+    try {
+      const [clientsRes, usersRes] = await Promise.all([
+        ReportsService.getSalesByClientAll(),
+        ReportsService.getSalesByUserAll(),
+      ]);
+
+      const fixedClients = clientsRes.data.map((c: any) => ({
+        ...c,
+        clientName: c.clientName || c.userName || "Cliente Desconocido",
+      }));
+
+      setByClient(fixedClients);
+      setByUser(usersRes.data);
+
+      setRangeReport(null);
+    } catch (error) {
+      console.error("Error cargando reportes iniciales", error);
+    }
+  };
 
   useEffect(() => {
-    loadReports();
+    loadInitialReports();
   }, []);
 
   return (
@@ -90,7 +110,7 @@ const loadReports = async () => {
           </div>
         </div>
         <button
-          onClick={loadReports}
+          onClick={loadReportsByRange}
           className="bg-black text-white px-8 py-3.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-black/10"
         >
           <Search size={20} /> Buscar
